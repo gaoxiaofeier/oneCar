@@ -4,45 +4,47 @@
             <div class="search-wrap">
                 <el-form :model="search" label-width="70px">
                     <el-row>
-                        <el-col :span="6">
+                        <el-col :span="4">
                             <el-form-item label="商品名：">
                                 <el-input v-model="search.name"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col :span="5" :offset="1">
-                          <el-form-item label="类别：" label-width="50px">
-                            <el-select v-model="search.categoryId" placeholder="请选择类别" style="width:270px;">
-                              <el-option v-for="(item ,index) of this.category" :key="index+'a'" :label="item.name" :value="item.id"></el-option>
-                            </el-select>
-                          </el-form-item>
+                            <el-form-item label="类别：" label-width="56px">
+                                <el-select v-model="search.categoryId" placeholder="请选择类别">
+                                    <el-option v-for="(item ,index) of this.category" :key="index+'a'" :label="item.name" :value="item.id"></el-option>
+                                </el-select>
+                            </el-form-item>
                         </el-col>
                         <el-col :span="2" :offset="1" style="text-align:right">
                             <el-button type="primary" icon="el-icon-search" @click="getTableData">搜索</el-button>
                         </el-col>
-                        <el-col :span="2" :offset="1" style="text-align:right">
-                            <el-button type="primary" icon="el-icon-search" @click="addType('new')">新增类别</el-button>
-                        </el-col>
+                        <div>
 
-                        <el-col :span="5" :offset="2" >
-                             <div class="table-wrap">
-                                    <el-table :data="typeTable" style="width: 100%" :border="true"  :highlight-current-row='false'>
-                                        <el-table-column prop="name" label="类别" style="">
-                                        </el-table-column>
-                                        <el-table-column prop="name" label="操作">
-                                            <template slot-scope="scope">
-                                                <div style="text-align:center">
-                                                    <el-button type="text" @click="addType('change',scope.row.id)">
-                                                        修改
-                                                    </el-button>
-                                                    <el-button type="text" @click="typeDelete(scope.row.id)">
-                                                        删除
-                                                    </el-button>
-                                                </div>
-                                            </template>
-                                        </el-table-column>
-                                    </el-table>
-                             </div>
-                        </el-col>
+                        </div>
+                        <div style="float:right">
+                            <div style="float:right;width:200px;">
+                                <el-table :data="typeTable" style="width: 100%" :border="true" :highlight-current-row='false'>
+                                    <el-table-column prop="name" label="类别" style="">
+                                    </el-table-column>
+                                    <el-table-column label="操作" width='90px'>
+                                        <template slot-scope="scope">
+                                            <div style="text-align:center">
+                                                <el-button type="text" @click="addType('change',scope.row)">
+                                                    修改
+                                                </el-button>
+                                                <el-button type="text" @click="typeDelete(scope.row.id)">
+                                                    删除
+                                                </el-button>
+                                            </div>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                            <div style="float:right;text-align:right;margin-right:10px;">
+                                <el-button type="primary" @click="addType('new')">新增类别</el-button>
+                            </div>
+                        </div>
                     </el-row>
                 </el-form>
             </div>
@@ -64,7 +66,7 @@
                     </el-table-column>
                     <el-table-column prop="image" label="主图">
                         <template slot-scope="scope">
-                            <div @click="showImageDetail([{'path':scope.row.image}])" style="width: 100%; height: 100%;" v-if="scope.row.image">
+                            <div @click="showImageDetail([{'path':scope.row.image,'type':1}])" style="width: 100%; height: 100%;" v-if="scope.row.image">
                                 <img style="width: 60px; height: 40px; display: block;" :src="scope.row.image" />
                             </div>
                         </template>
@@ -100,7 +102,7 @@
                                     删除
                                 </el-button>
                             </div>
-                            
+
                         </template>
                     </el-table-column>
                 </el-table>
@@ -115,29 +117,29 @@
                     <el-carousel trigger="click" v-if="bigImageUrlList.length > 1">
                         <el-carousel-item v-for="(item, index) in bigImageUrlList" :key="index">
                             <img v-if="item.type == 1" :src="item.path" />
-                            <video  v-if="item.type == 2" :src="item.path" controls="controls">
+                            <video v-if="item.type == 2" :src="item.path" controls="controls">
                                 您的浏览器不支持 video 标签。
                             </video>
                         </el-carousel-item>
                     </el-carousel>
                     <div v-else>
                         <img v-if="bigImageUrlList[0] && bigImageUrlList[0].type == 1" :src="bigImageUrlList[0].path" />
-                        <video  v-if="bigImageUrlList[0] && bigImageUrlList[0].type == 2" :src="bigImageUrlList[0].path" controls="controls">
+                        <video v-if="bigImageUrlList[0] && bigImageUrlList[0].type == 2" :src="bigImageUrlList[0].path" controls="controls">
                             您的浏览器不支持 video 标签。
                         </video>
-                    </div>      
-                    
+                    </div>
+
                 </div>
             </el-dialog>
             <!-- 弹窗 -->
-            <el-dialog title="编辑商品类别" :visible.sync="typeBox" width="400px">
+            <el-dialog title="编辑商品类别:" :visible.sync="typeBox" width="400px">
                 <el-form ref="form">
-                    <el-form-item label="编辑商品类别" label-width="80px">
+                    <el-form-item label="类别名称：" label-width="100px">
                         <div style="width:200px;float:left">
-                        <el-input v-model="typeCount"  autocomplete="off"></el-input>
+                            <el-input v-model="typeCount" autocomplete="off"></el-input>
                         </div>
                     </el-form-item>
-                    <el-form-item style="display: flex;margin-left: 94px;">
+                    <el-form-item style="display: flex;margin-left: 122px;">
                         <el-button type="primary" @click="submitType('add')">确 定</el-button>
                         <el-button @click="resetType('form')">取 消</el-button>
                     </el-form-item>
@@ -166,7 +168,7 @@ export default {
             action: this.$store.getters.uploadImage + 'file/upload',
             search: {
                 name: '',
-                categoryId:''
+                categoryId: '',
             },
             pagination: {
                 pageNum: 1,
@@ -186,12 +188,12 @@ export default {
             shelves: '',
             isShowBigImage: false, //查看图片
             bigImageUrlList: [],
-            category:[],
-            typeBox:false, //修改类别弹窗
-            typeCount:'',  //类别input
-            typeTable:[],
-            categoryOper:false,  //true 新增类别   false修改类别
-            categoryId:''  //修改类别的id
+            category: [],
+            typeBox: false, //修改类别弹窗
+            typeCount: '', //类别input
+            typeTable: [],
+            categoryOper: false, //true 新增类别   false修改类别
+            categoryId: '', //修改类别的id
         }
     },
     filters: {
@@ -242,7 +244,7 @@ export default {
         },
     },
     created: function () {
-        this.getTableData();
+        this.getTableData()
         this.categoryList()
     },
 
@@ -324,18 +326,18 @@ export default {
                     console.log(err)
                 })
         },
-        categoryList(){
+        categoryList() {
             //类别
-              util.ajax
+            util.ajax
                 .get('v2.0/shop/category/list')
-                .then(res => {
-                  if (parseInt(res.data.code) == 200) {
-                      this.category=res.data.data
-                      this.typeTable=res.data.data
-                  }
+                .then((res) => {
+                    if (parseInt(res.data.code) == 200) {
+                        this.category = res.data.data
+                        this.typeTable = res.data.data
+                    }
                 })
-                .catch(function(err) {
-                  console.log(err)
+                .catch(function (err) {
+                    console.log(err)
                 })
         },
         analyzeData(list) {
@@ -409,69 +411,81 @@ export default {
         },
         showImageDetail(list) {
             if (list.length != 0) {
-                this.bigImageUrlList = list;
-                this.isShowBigImage = true; 
+                this.bigImageUrlList = list
+                this.isShowBigImage = true
                 console.log(this.bigImageUrlList)
             }
         },
         //商品类别增删改
-        addType(type,id){
-            if(type=='add'){
-                this.categoryOper=true
-                this.typeBox=true;
-            }else{
-               this.categoryOper=false
-                this.categoryId=id
+        addType(type, value) {
+            if (type == 'add') {
+                this.categoryOper = true
+                this.typeCount = ''
+            } else {
+                this.categoryOper = false
+                this.categoryId = value.id
+                this.typeCount = value.name
             }
-            this.typeBox=true;
-            this.typeCount='';
-            
+            this.typeBox = true
         },
-        submitType(){
-            if(this.categoryOper){//新增
+        submitType() {
+            if (this.categoryOper) {
+                //新增
                 let params = {
                     id: '',
                     name: this.typeCount,
                 }
                 util.ajax
-                .post('v2.0/shop/category/renew', params)
-                .then((res) => {
-                    if (parseInt(res.data.code) == 200) {
-                        this.$message('操作成功');
-                        this.typeBox=false;
-                        this.categoryList()
-                    }
-                })
-                .catch(function (err) {
-                    console.log(err)
-                })
-            }else{
+                    .post('v2.0/shop/category/renew', params)
+                    .then((res) => {
+                        if (parseInt(res.data.code) == 200) {
+                            this.$message('操作成功')
+                            this.typeBox = false
+                            this.categoryList()
+                        }
+                    })
+                    .catch(function (err) {
+                        console.log(err)
+                    })
+            } else {
                 let params = {
                     id: this.categoryId,
                     name: this.typeCount,
                 }
                 util.ajax
-                .post('v2.0/shop/category/renew', params)
+                    .post('v2.0/shop/category/renew', params)
+                    .then((res) => {
+                        if (parseInt(res.data.code) == 200) {
+                            this.$message('操作成功')
+                            this.typeBox = false
+                            this.categoryList()
+                        }
+                    })
+                    .catch(function (err) {
+                        console.log(err)
+                    })
+            }
+        },
+        resetType() {
+            this.typeCount = ''
+            this.typeBox = false
+        },
+        //删除
+        typeDelete(id) {
+            let ids = parseInt(id)
+            util.ajax
+                .delete('v2.0/shop/category/' + ids) //
                 .then((res) => {
+                    console.log(res)
                     if (parseInt(res.data.code) == 200) {
-                        this.$message('操作成功');
-                        this.typeBox=false;
+                        this.$message('删除成功')
                         this.categoryList()
                     }
                 })
                 .catch(function (err) {
                     console.log(err)
                 })
-            }
         },
-        resetType(){
-            this.typeCount='';
-            this.typeBox=false;
-        },
-        //删除
-        typeDelete(id){
-
-        }
     },
 }
 </script>
@@ -704,7 +718,7 @@ export default {
     max-width: 100%;
     max-height: 100%;
 }
-.el-button+.el-button {
+.el-button + .el-button {
     margin-left: 0px;
 }
 </style>

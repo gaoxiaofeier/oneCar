@@ -675,7 +675,6 @@ export default {
     tyreSubmitForm(formName){
         this.$refs[formName].validate(valid => {
             if (valid) {
-              
               let params = new URLSearchParams()
               params.append('id', this.tyreUserId)
               params.append('tyre', this.tyreForm.tyre)
@@ -690,9 +689,7 @@ export default {
                 })
                 .catch(function(err) {
                   console.log(err)
-                })
-              
-              
+                })  
             }
         })
     },
@@ -820,7 +817,7 @@ export default {
           '体重',
           'VIP状态',
           '参赛车辆',
-          '赛道历史圈速',
+          'li历史圈速',
           '是否参与活动',
           '备注'
         ] // 对应表格输出的中文title

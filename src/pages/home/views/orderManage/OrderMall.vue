@@ -99,6 +99,11 @@
                     <el-table-column prop="solution" label="协商结果" width="80">
                     </el-table-column>
                     <el-table-column prop="remark" label="备注">
+                        <template slot-scope="scope">
+                        <div @click="changeH(scope.row.orderId)" type="text" size="small" style="min-height:50px;line-height:50px;cursor:pointer;">
+                          {{scope.row.remark}}
+                        </div>
+                      </template>
                     </el-table-column>
                     <el-table-column prop="status" label="状态">
                         <template slot-scope="scope">
@@ -136,7 +141,7 @@
                     </el-form-item>
                 </el-form>
             </el-dialog>
-            <el-dialog title="解决方案" :visible.sync="solutionFormVisible" width="400px">
+            <el-dialog tititle="解决方案" :visible.sync="solutionFormVisible" width="400px">
                 <el-form ref="form">
                     <el-form-item label="解决方案：" >
                         <el-input type="textarea" v-model="solution"></el-input>
@@ -147,6 +152,18 @@
                     </el-form-item>
                 </el-form>
             </el-dialog>
+            <!-- 修改备注弹窗 -->
+              <el-dialog title="备注修改" :visible.sync="remarkVisible" width="400px">
+                <el-form  >
+                  <el-form-item label="备注：" prop="hover"  style="margin-bottom: 18px; width:50px;">
+                    <el-input type="textarea" v-model="remarkBox"></el-input>
+                  </el-form-item>
+                  <div class="dialog-footer" style="text-align:center;">
+                    <el-button @click="resetRemark('form')">取 消</el-button>
+                    <el-button type="primary" @click="submitRemark()">确 定</el-button>
+                  </div>
+                </el-form>
+              </el-dialog>
         </div>
     </el-main>
 </template>
@@ -197,6 +214,9 @@ export default {
             logistics: '', //弹窗内input
             solutionFormVisible: false, //解决方案弹窗
             solution: '', //弹窗内input
+            remarkVisible:false, //备注弹窗
+            remarkBox:'',  //备注弹窗input
+            remarkId:Number, //备注弹窗传的id
         }
     },
     filters: {
@@ -319,12 +339,7 @@ export default {
             // 调用接口
             this.getTableData()
         },
-
         getSearchParams() {
-            // 根据后台字段 对应修改
-            // 最好是和后台保持一致
-
-            // 处理 regTime 成后台接受的时间格式
             if (this.search.payTime.length != 0) {
                 this.search.startTime = this.search.payTime[0]
                 this.search.endTime = this.search.payTime[1]
@@ -485,7 +500,6 @@ export default {
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.logisticsFormVisible = false
-                        //this.$message('已提交解决方案')
                         this.getTableData()
                     } else if (parseInt(res.data.code) == 20007) {
                         this.$router.push('/Login')
@@ -516,6 +530,39 @@ export default {
                 .catch(function (err) {
                     console.log(err)
                 })
+        },
+        //点击备注修改
+        changeH(id) {
+          this.remarkVisible = true  //备注弹窗
+          this.remarkId = parseInt(id)
+
+          
+        },
+        resetRemark() {
+          this.remarkVisible = false
+        },
+        submitRemark() {
+            if(this.remarkBox){
+                let params = {
+                    orderId:this.remarkId,
+                    remark:this.remarkBox
+                }
+            util.ajax
+                .post('v2.0/shop/renew', params) // 以车型为基准 不是以 id
+                .then((res) => {
+                   if (parseInt(res.data.code) == 200) {
+                        this.remarkVisible = false
+                        this.$message('备注修改成功')
+                        this.getTableData()
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err)
+                })
+            }else{
+
+            }
+            
         }
     },
 }

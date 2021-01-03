@@ -78,7 +78,6 @@
                                             <div style="width:100px;heigh:30px;position:relative;float:left;" v-for="(innerItem,innerIndex) in item.vals" :key="innerIndex+'li'">
                                                 <i class="el-icon-error close_form2" @click="closeSpecsVal(index,innerIndex,'inner')"></i>
                                                 <el-input v-model="innerItem.value" class="specs_ipt"></el-input>
-                                                <i style="width:10px;height:10px;display:block;fot-size:10px;overflow:hidden;opacity:0;">{{innerItem.pic}}</i>
                                                 <el-upload v-if="item.needPic" class="avatar-uploader" :limit="1" :action="action" :show-file-list="true" :on-success="successInnerPic.bind(null, {'outerIndex':index,'innerIndex':innerIndex,'data':innerItem})" :on-remove="removeForPic.bind(null,{'innerIndex':innerIndex})" :before-upload="beforeUpload">
                                                     <span v-if="innerItem.pic">
                                                         <img :src="innerItem.pic" class="avatar">
@@ -219,7 +218,7 @@ export default {
                 skus: [],
                 minPrice: 0,
                 postFee: null,
-                elseSpecInfos: [{ name: '', vals: [{ value: '', price: null }] }],
+                elseSpecInfos: [{ name: '', vals: [{ value: '', price: null }]}],
             },
             formRules: {
                 name: [{ required: true, message: '商品名不能为空', trigger: 'blur' }],
@@ -810,6 +809,11 @@ export default {
             let template = JSON.parse(JSON.stringify(this.formLabel))
             template.mainPic = this.returnImg
             template.descPic = this.returnImgDes
+            template.elseSpecInfos.forEach((item,i)=>{
+                if(item.name==''){
+                    template.elseSpecInfos.splice(i,1)
+                }
+            })
             let params = JSON.stringify(template)
             util.ajax
                 .post('v2.0/shop/renew', params) // 以车型为基准 不是以 id
