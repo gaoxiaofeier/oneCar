@@ -457,7 +457,7 @@ export default {
                 .post('v2.0/order/writeSolution', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
-                        this.logisticsFormVisible = false
+                        this.solutionFormVisible = false
                         this.$message('已提交解决方案')
                         this.getTableData()
                     } else if (parseInt(res.data.code) == 20007) {
@@ -472,6 +472,7 @@ export default {
         resetSolution() {
             this.solution = '';
             this.solutionFormVisible = false;
+            
         },
         //有问题-》待解决状态
         haveProblem(orderId){

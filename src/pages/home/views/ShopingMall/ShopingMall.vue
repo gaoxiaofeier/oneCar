@@ -4,13 +4,44 @@
             <div class="search-wrap">
                 <el-form :model="search" label-width="70px">
                     <el-row>
-                        <el-col :span="7">
+                        <el-col :span="6">
                             <el-form-item label="商品名：">
                                 <el-input v-model="search.name"></el-input>
                             </el-form-item>
                         </el-col>
-                        <el-col :span="7" style="text-align:right">
+                        <el-col :span="5" :offset="1">
+                          <el-form-item label="类别：" label-width="50px">
+                            <el-select v-model="search.categoryId" placeholder="请选择类别" style="width:270px;">
+                              <el-option v-for="(item ,index) of this.category" :key="index+'a'" :label="item.name" :value="item.id"></el-option>
+                            </el-select>
+                          </el-form-item>
+                        </el-col>
+                        <el-col :span="2" :offset="1" style="text-align:right">
                             <el-button type="primary" icon="el-icon-search" @click="getTableData">搜索</el-button>
+                        </el-col>
+                        <el-col :span="2" :offset="1" style="text-align:right">
+                            <el-button type="primary" icon="el-icon-search" @click="addType('new')">新增类别</el-button>
+                        </el-col>
+
+                        <el-col :span="5" :offset="2" >
+                             <div class="table-wrap">
+                                    <el-table :data="typeTable" style="width: 100%" :border="true"  :highlight-current-row='false'>
+                                        <el-table-column prop="name" label="类别" style="">
+                                        </el-table-column>
+                                        <el-table-column prop="name" label="操作">
+                                            <template slot-scope="scope">
+                                                <div style="text-align:center">
+                                                    <el-button type="text" @click="addType('change',scope.row.id)">
+                                                        修改
+                                                    </el-button>
+                                                    <el-button type="text" @click="typeDelete(scope.row.id)">
+                                                        删除
+                                                    </el-button>
+                                                </div>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                             </div>
                         </el-col>
                     </el-row>
                 </el-form>
@@ -31,10 +62,10 @@
                     </el-table-column>
                     <el-table-column prop="categoryName" label="类别">
                     </el-table-column>
-                    <el-table-column prop="minPic" label="主图">
+                    <el-table-column prop="image" label="主图">
                         <template slot-scope="scope">
-                            <div @click="showImageDetail([scope.row.minPic])" style="width: 100%; height: 100%;" v-if="scope.row.minPic">
-                                <img style="width: 60px; height: 40px; display: block;" :src="scope.row.minPic" />
+                            <div @click="showImageDetail([{'path':scope.row.image}])" style="width: 100%; height: 100%;" v-if="scope.row.image">
+                                <img style="width: 60px; height: 40px; display: block;" :src="scope.row.image" />
                             </div>
                         </template>
                     </el-table-column>
@@ -58,15 +89,18 @@
                     </el-table-column>
                     <el-table-column prop="id" label="操作">
                         <template slot-scope="scope">
-                            <el-button type="text" @click="changeStatus(scope.row.id,scope.row.status)">
-                                {{scope.row.status | statusFilter}}
-                            </el-button>
-                            <el-button type="text" @click="pageTab(false,scope.row.id)">
-                                修改
-                            </el-button>
-                            <el-button type="text" @click="handleDelete(scope.row.id)">
-                                删除
-                            </el-button>
+                            <div style="text-align:center">
+                                <el-button type="text" @click="changeStatus(scope.row.id,scope.row.status)" style="marin-left:10px;">
+                                    {{scope.row.status | statusFilter}}
+                                </el-button>
+                                <el-button type="text" @click="pageTab(false,scope.row.id)">
+                                    修改
+                                </el-button>
+                                <el-button type="text" @click="handleDelete(scope.row.id)">
+                                    删除
+                                </el-button>
+                            </div>
+                            
                         </template>
                     </el-table-column>
                 </el-table>
@@ -80,12 +114,34 @@
                 <div class="img-wrap">
                     <el-carousel trigger="click" v-if="bigImageUrlList.length > 1">
                         <el-carousel-item v-for="(item, index) in bigImageUrlList" :key="index">
-                            <img :src="item" />
+                            <img v-if="item.type == 1" :src="item.path" />
+                            <video  v-if="item.type == 2" :src="item.path" controls="controls">
+                                您的浏览器不支持 video 标签。
+                            </video>
                         </el-carousel-item>
                     </el-carousel>
-                    <img v-if="bigImageUrlList.length === 1 && bigImageUrlList[0]" :src="bigImageUrlList[0]" />
-
+                    <div v-else>
+                        <img v-if="bigImageUrlList[0] && bigImageUrlList[0].type == 1" :src="bigImageUrlList[0].path" />
+                        <video  v-if="bigImageUrlList[0] && bigImageUrlList[0].type == 2" :src="bigImageUrlList[0].path" controls="controls">
+                            您的浏览器不支持 video 标签。
+                        </video>
+                    </div>      
+                    
                 </div>
+            </el-dialog>
+            <!-- 弹窗 -->
+            <el-dialog title="编辑商品类别" :visible.sync="typeBox" width="400px">
+                <el-form ref="form">
+                    <el-form-item label="编辑商品类别" label-width="80px">
+                        <div style="width:200px;float:left">
+                        <el-input v-model="typeCount"  autocomplete="off"></el-input>
+                        </div>
+                    </el-form-item>
+                    <el-form-item style="display: flex;margin-left: 94px;">
+                        <el-button type="primary" @click="submitType('add')">确 定</el-button>
+                        <el-button @click="resetType('form')">取 消</el-button>
+                    </el-form-item>
+                </el-form>
             </el-dialog>
         </div>
 
@@ -110,6 +166,7 @@ export default {
             action: this.$store.getters.uploadImage + 'file/upload',
             search: {
                 name: '',
+                categoryId:''
             },
             pagination: {
                 pageNum: 1,
@@ -129,6 +186,12 @@ export default {
             shelves: '',
             isShowBigImage: false, //查看图片
             bigImageUrlList: [],
+            category:[],
+            typeBox:false, //修改类别弹窗
+            typeCount:'',  //类别input
+            typeTable:[],
+            categoryOper:false,  //true 新增类别   false修改类别
+            categoryId:''  //修改类别的id
         }
     },
     filters: {
@@ -179,7 +242,8 @@ export default {
         },
     },
     created: function () {
-        this.getTableData()
+        this.getTableData();
+        this.categoryList()
     },
 
     mounted: function () {},
@@ -237,15 +301,21 @@ export default {
                         let list = res.data.data.data
                         this.tableList = this.analyzeData(list) //画表格
                         this.tableData = list
-                        let total = res.data.data.data.length
+                        let total = res.data.data.total
                         this.handleGetTableData(total) // 根据需要增加参数
-                        this.tableData.forEach((item, index) => {
-                            // item.minPic =
-                            //     'http://app-onecar.oss-cn-beijing.aliyuncs.com/oneCar/272aabae-2995-44af-b7ef-c339571dc928.jpg'
-                            // item.mainPic=['http://app-onecar.oss-cn-beijing.aliyuncs.com/oneCar/272aabae-2995-44af-b7ef-c339571dc928.jpg',
-                            //     'http://app-onecar.oss-cn-beijing.aliyuncs.com/1609601350789_672_85026c8694cdea6c447db3ed67856fcb.jpg'
-                            // ]
-                        })
+                        // this.tableData.forEach((item, index) => {
+                        //     console.log(item.mainPic)
+                        //     let newArr=item.mainPic
+                        //     let returnArr=[]
+                        //     newArr.forEach((inner,index)=>{
+                        //        returnArr.push(inner.path)
+                        //     })
+                        //     console.log(returnArr)
+                        //     item.mainPic=returnArr
+                        //     // item.image =
+                        //     //     'http://app-onecar.oss-cn-beijing.aliyuncs.com/oneCar/272aabae-2995-44af-b7ef-c339571dc928.jpg'
+                        //     //item.mainPic=["http://app-onecar.oss-cn-beijing.aliyuncs.com/1609651419443_950_011fb337c2f5d0d0463f1ba79e4d9808.jpg"]
+                        // })
                     } else if (parseInt(res.data.code) == 3002) {
                         this.$router.push('/Login')
                     }
@@ -254,17 +324,18 @@ export default {
                     console.log(err)
                 })
         },
-        getCarBrand(carbrand) {
-            let params = new URLSearchParams()
-            params.append('carbrand', carbrand)
-            util.ajax
-                .get('carInfo/queryCardetailed?' + params)
-                .then((res) => {
-                    if (parseInt(res.data.code) == 301000) {
-                    }
+        categoryList(){
+            //类别
+              util.ajax
+                .get('v2.0/shop/category/list')
+                .then(res => {
+                  if (parseInt(res.data.code) == 200) {
+                      this.category=res.data.data
+                      this.typeTable=res.data.data
+                  }
                 })
-                .catch(function (err) {
-                    console.log(err)
+                .catch(function(err) {
+                  console.log(err)
                 })
         },
         analyzeData(list) {
@@ -331,169 +402,6 @@ export default {
                     console.log(err)
                 })
         },
-        //弹窗部分
-        //弹窗图片上传
-        successAdd(res, file) {
-            let image = res.data[0]
-            this.returnImg = image.url
-            this.addFormLabelAlign.picList[0].name = image.name
-            this.addFormLabelAlign.picList[0].url = image.url
-            this.$forceUpdate()
-        },
-        SuccessChange(res, file) {
-            let image = res.data[0]
-            this.returnImg = image.url
-            this.modifyFormLabelAlign.picList[0].url = image.url
-            this.modifyFormLabelAlign.picList[0].name = image.name
-            this.$forceUpdate()
-        },
-        successCar(res, file) {
-            let image = res.data[0]
-            this.returnImg = image.url
-            this.carBrandForm.picList[0].url = image.url
-            this.carBrandForm.picList[0].name = image.name
-            this.$forceUpdate()
-        },
-
-        handleRemove(file) {
-            this.addFormLabelAlign.picList = [{ name: '', url: '' }]
-            this.modifyFormLabelAlign.picList = [{ name: '', url: '' }]
-            this.carBrandForm.picList = [{ name: '', url: '' }]
-            this.returnImg = ''
-        },
-        beforeAvatarUpload(file) {
-            const isJPG = file.type === 'image/jpeg'
-            const isPng = file.type === 'image/png'
-            const isLt500kb = file.size / 1024 < 500
-            if (!(isJPG || isPng)) {
-                this.$message.error('上传头像图片只能是 JPG, PNG 格式!')
-            }
-            if (!isLt500kb) {
-                this.$message.error('上传头像图片大小不能超过 500kb!')
-            }
-            return (isPng || isJPG) && isLt500kb
-        },
-
-        //提交
-        btnSubmit(value, formName, carType) {
-            this.$refs[formName].validate((valid) => {
-                switch (value) {
-                    case 0: //新增提交
-                        this.addFormLabelAlign.vehicleSystem.forEach((item, i) => {
-                            //.log(item.vehicleName)
-                            item.vehicleType.forEach((value, index) => {
-                                if (
-                                    !value.vehicleName &&
-                                    !value.beginYear &&
-                                    !item.vehicleName &&
-                                    i > 0
-                                ) {
-                                    this.addFormLabelAlign.vehicleSystem.splice(i, 1)
-                                }
-                                if (!value.vehicleName && !value.beginYear && index > 0) {
-                                    // console.log(value)
-                                    item.vehicleType.splice(index, 1)
-                                }
-                            })
-                        })
-                        let template = JSON.parse(JSON.stringify(this.addFormLabelAlign))
-                        template.picList[0].url = this.returnImg
-                        let params = JSON.stringify(template)
-                        util.ajax
-                            .post('carInfo/increaseCarInfo', params) // 以车型为基准 不是以 id
-                            .then((res) => {
-                                if (parseInt(res.data.code) == 301000) {
-                                    this.getTableData()
-                                    this.showToogle = true
-                                    this.modifyFormLabelAlign = {
-                                        carbrand: '',
-                                        vehicleSystem: [
-                                            {
-                                                vehicleName: '',
-                                                vehicleType: [{ vehicleName: '', beginYear: '' }],
-                                            },
-                                        ],
-                                        imageUrl: '', //上传默认图片路径
-                                        initials: '', //首字母
-                                    }
-                                    this.isDel = [true]
-                                    this.carTypeMobleXing = [1]
-                                    this.carTypeMobleXi = 1
-
-                                    this.showToogle = true
-                                }
-                            })
-                            .catch(function (err) {
-                                console.log(err)
-                            })
-                        break
-                    case 1:
-                        let gather = {}
-                        if (carType) {
-                            //修改车系
-                            this.carBrandForm.vehicleSystem.forEach((item, i) => {
-                                item.vehicleType.forEach((value, index) => {
-                                    if (
-                                        !value.vehicleName &&
-                                        !value.beginYear &&
-                                        !item.vehicleName &&
-                                        i > 0
-                                    ) {
-                                        this.carBrandForm.vehicleSystem.splice(i, 1)
-                                    }
-                                    if (!value.vehicleName && !value.beginYear && index > 0) {
-                                        item.vehicleType.splice(index, 1)
-                                    }
-                                })
-                            })
-                            let template2 = JSON.parse(JSON.stringify(this.carBrandForm))
-                            template2.picList[0].url = this.returnImg
-                            gather = JSON.stringify(template2)
-                        } else {
-                            //单条修改车型
-
-                            let template3 = JSON.parse(JSON.stringify(this.modifyFormLabelAlign))
-                            template3.picList[0].url = this.returnImg
-                            gather = JSON.stringify(template3)
-                        }
-
-                        //修改提交
-                        util.ajax
-                            .post('carInfo/updateCarInfo', gather) // 以车型为基准 不是以 id
-                            .then((res) => {
-                                if (parseInt(res.data.code) == 301000) {
-                                    this.showToogle = true
-                                    this.modifyFormLabelAlign = {
-                                        carbrand: '',
-                                        vehicleSystem: [
-                                            {
-                                                vehicleName: '',
-                                                vehicleType: [{ vehicleName: '', beginYear: '' }],
-                                            },
-                                        ],
-                                        imageUrl: '', //上传默认图片路径
-                                        initials: '', //首字母
-                                    }
-                                    this.getTableData()
-                                    this.showToogle = true
-                                }
-                            })
-                            .catch(function (err) {
-                                console.log(err)
-                            })
-                        break
-                    case 2: //修改整个品牌车系
-                        break
-                }
-            })
-        },
-        //取消
-        btnCancle(formName) {
-            // console.log(formName)
-            this.$refs[formName].resetFields()
-            this.showToogle = true
-            //清空数据
-        },
         //查看图片
         handleBigImageClose(done) {
             this.bigImageUrlList = []
@@ -501,10 +409,69 @@ export default {
         },
         showImageDetail(list) {
             if (list.length != 0) {
-                ;(this.bigImageUrlList = list), (this.isShowBigImage = true)
+                this.bigImageUrlList = list;
+                this.isShowBigImage = true; 
                 console.log(this.bigImageUrlList)
             }
         },
+        //商品类别增删改
+        addType(type,id){
+            if(type=='add'){
+                this.categoryOper=true
+                this.typeBox=true;
+            }else{
+               this.categoryOper=false
+                this.categoryId=id
+            }
+            this.typeBox=true;
+            this.typeCount='';
+            
+        },
+        submitType(){
+            if(this.categoryOper){//新增
+                let params = {
+                    id: '',
+                    name: this.typeCount,
+                }
+                util.ajax
+                .post('v2.0/shop/category/renew', params)
+                .then((res) => {
+                    if (parseInt(res.data.code) == 200) {
+                        this.$message('操作成功');
+                        this.typeBox=false;
+                        this.categoryList()
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err)
+                })
+            }else{
+                let params = {
+                    id: this.categoryId,
+                    name: this.typeCount,
+                }
+                util.ajax
+                .post('v2.0/shop/category/renew', params)
+                .then((res) => {
+                    if (parseInt(res.data.code) == 200) {
+                        this.$message('操作成功');
+                        this.typeBox=false;
+                        this.categoryList()
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err)
+                })
+            }
+        },
+        resetType(){
+            this.typeCount='';
+            this.typeBox=false;
+        },
+        //删除
+        typeDelete(id){
+
+        }
     },
 }
 </script>
@@ -730,5 +697,14 @@ export default {
     height: auto;
     max-width: 100%;
     max-height: 100%;
+}
+.car-config >>> .el-dialog .el-dialog__body div.img-wrap video {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+}
+.el-button+.el-button {
+    margin-left: 0px;
 }
 </style>

@@ -12,8 +12,12 @@
                         </el-form-item>
                         <el-form-item label="商品类别：">
                             <div style="width:200px;heigh:30px;">
-                                <el-input v-model="formLabel.categoryName" class="c_ipt"></el-input>
+                                 <el-select v-model="formLabel.categoryName" placeholder="请选择类别" >
+                                  <el-option v-for="(item ,index) of this.category" :key="index+'a'" :label="item.name" :value="item.id"></el-option>
+                                </el-select>
+                                <!-- <el-input v-model="formLabel.categoryName" class="c_ipt"></el-input> -->
                             </div>
+                           
                         </el-form-item>
                         <el-form-item label="商品缩略图：" class="gigi">
                             <el-upload class="avatar-uploader" :limit="1" :action="this.action" :show-file-list="true" :on-success="successSuolue" :before-upload="beforeUpload" :on-remove="removePic">
@@ -33,7 +37,7 @@
                             <div style="width:303px">
                                 <el-progress v-show="showProgress" :text-inside="true" :stroke-width="15" :percentage="progress"></el-progress>
                             </div>
-                            <p class="img_font">文件像素600x200，支持jpg,png,jpeg文件，最多上传九张</p>
+                            <p class="img_font">文件像素600x200，支持jpg,png,jpeg,mp4文件，最多上传九个</p>
                         </el-form-item>
                         <!-- <el-form-item label="商品视频：" class="gigi">
                             <el-upload class="avatar-uploader" :limit="1" :action="this.action" :show-file-list="true" :on-success="succesVideo" :before-upload="beforeUploadVideo" :on-remove="removePicVideo">
@@ -174,7 +178,6 @@
             <!-- 弹窗 -->
             <el-dialog title="批量设置" :visible.sync="collectbox" width="400px">
                 <el-form ref="form">
-                    
                     <el-form-item :label="boxTitle" label-width="80px">
                         <div style="width:200px;float:left">
                         <el-input v-model="collectCount" @input="collectCount=collectCount.replace(/[^\d]/g,'')" autocomplete="off"></el-input>
@@ -193,6 +196,7 @@
 import util from '@/libs/util2'
 import { ossClient } from '@/libs/alioss'
 import draggable from 'vuedraggable'
+import play  from '@/assets/play.jpg'
 export default {
     name: 'ShopingMallChange',
     components: {
@@ -244,7 +248,8 @@ export default {
                 { name: '', state: false },
             ],
             flag: true, //区别一列合并还是两列  true 两列， false 一俩
-            skus:[]
+            skus:[],
+            category:[]  //类别
         }
     },
     computed: {
@@ -269,6 +274,18 @@ export default {
     },
     methods: {
         initData() {
+            //类别
+              util.ajax
+                .get('v2.0/shop/category/list')
+                .then(res => {
+                  if (parseInt(res.data.code) == 200) {
+                      this.category=res.data.data
+                  }
+                })
+                .catch(function(err) {
+                  console.log(err)
+                })
+              
             if (this.$route.query.pageState.state == false) {
                 this.title = '修改商品'
                 this.returnImg=[]
@@ -301,21 +318,28 @@ export default {
                                         break
                                 }
                             })
-                            resData.mainPic.forEach((item, index) => {
+                            this.formLabel=resData
+
+                            this.formLabel.mainPic.forEach((item, index) => {
                                 item.url = item.path
                                 let temp = { type: item.type, path: item.path }
+
                                 this.returnImg.push(temp)
+                                if(item.type==2){
+                                    this.formLabel.mainPic[index].url=play
+                                    console.log(this.formLabel.mainPic[index])
+                                }
+                                console.log(resData.mainPic)
                             })
-                            resData.descPic.forEach((item, index) => {
+                            this.formLabel.descPic.forEach((item, index) => {
                                 item.url = item.path
                                 let temp = { type: item.type, path: item.path }
                                 this.returnImgDes.push(temp)
                             })
-                            resData.specs.forEach((item, i) => {
+                            this.formLabel.specs.forEach((item, i) => {
                                 this.skusName[i].state = true
                                 this.skusName[i].name = item.name
                             })
-                            this.formLabel=resData
                             this.tableSplit =this.analyzeData(this.formLabel.skus)
                             if (this.formLabel.skus.length > 0) {
                                 this.collect = true
@@ -387,7 +411,6 @@ export default {
         },
         //图文介绍，上传
         async httpUploadDes(file) {
-            //this.showProgress = false
             var fileName =
                 new Date().getTime() + '_' + Math.ceil(Math.random() * 1000) + '_' + file.file.name
             ossClient()
@@ -419,6 +442,13 @@ export default {
             this.$forceUpdate()
         },
         successPei(res, file) {
+            if(file.raw.type=='video/mp4'){
+                let urlDress={url:play}
+                this.formLabel.mainPic.push(urlDress)
+            }else {
+                let urlDress={url:file.url}
+                this.formLabel.mainPic.push(urlDress)
+            }
             this.progressCount++
             let uf = this.$refs.upload.uploadFiles.length
             this.showProgress = true
@@ -438,10 +468,12 @@ export default {
         handleRemove(file, fileList) {
             this.showProgress = false
             this.progressCount -= 1
+        
             this.returnImg.forEach((item, index) => {
-                if (item.path == file.url) {
+                if (item.path == file.path) {
+                    console.log(87)
                     this.returnImg.splice(index, 1)
-
+                    this.formLabel.mainPic.splice(index, 1)
                 }
             })
         },
@@ -658,7 +690,7 @@ export default {
                 for (var i = 0; i < len1; i++) {
                     for (var j = 0; j < len2; j++) {
                         temp[index] = {
-                            id: i,
+                            // id: i,
                             indexs: i + '_' + j,
                             specsName1: doubleArrays[0][i].value,
                             specsName2: doubleArrays[1][j].value,
@@ -690,7 +722,7 @@ export default {
                     for (var j = 0; j < len2; j++) {
                         for (var k = 0; k < len3; k++) {
                             temp[index] = {
-                                id: i,
+                                // id: i,
                                 indexs: i + '_' + j + '_' + k,
                                 specsName1: doubleArrays[0][i].value,
                                 specsName2: doubleArrays[1][j].value,
@@ -717,7 +749,7 @@ export default {
                 this.skusName[0].name = this.formLabel.specs[0].name
                 this.formLabel.specs[0].vals.forEach((item, i) => {
                     dataTemp = {
-                        id: i,
+                        indexs: i,
                         specsName1: item.value,
                         specsData: '' + [item.value] + '',
                         commonPrice: '',
