@@ -153,10 +153,10 @@
                 </el-form>
             </el-dialog>
             <!-- 修改备注弹窗 -->
-              <el-dialog title="备注修改" :visible.sync="remarkVisible" width="400px">
+              <el-dialog title="备注修改" :visible.sync="remarkVisible" width="380px">
                 <el-form  >
-                  <el-form-item label="备注：" prop="hover"  style="margin-bottom: 18px; width:50px;">
-                    <el-input type="textarea" v-model="remarkBox"></el-input>
+                  <el-form-item label="备注：" prop="hover" width="60px" style="margin-bottom: 18px;">
+                    <el-input type="textarea" v-model="remarkBox" style="width:260px"></el-input>
                   </el-form-item>
                   <div class="dialog-footer" style="text-align:center;">
                     <el-button @click="resetRemark('form')">取 消</el-button>
@@ -548,7 +548,7 @@ export default {
                     remark:this.remarkBox
                 }
             util.ajax
-                .post('v2.0/shop/renew', params) // 以车型为基准 不是以 id
+                .post('v2.0/order/writeRemark', params) // 以车型为基准 不是以 id
                 .then((res) => {
                    if (parseInt(res.data.code) == 200) {
                         this.remarkVisible = false
