@@ -381,14 +381,12 @@ export default {
         .catch(err => {
           console.log(`阿里云OSS上传图片失败回调`, err)
         })
-    
-
     },
 
     async httpUpload(file) {
        
         this.showProgress=false
-        var fileName =new Date().getTime() + '_' + Math.ceil(Math.random() * 1000) + '_' + file.name
+        var fileName =new Date().getTime() + '_' + Math.ceil(Math.random() * 1000) + '_' + file.file.name
         ossClient()
           .put(fileName, file.file, {
             ContentType: 'image/jpeg',
@@ -544,6 +542,7 @@ export default {
     },
     //新增修改弹窗部分
     modifyAlbum(row) {
+        console.log(row)
       if (arguments.length) {
         this.showToogle = false
         this.title = '修改活动'
@@ -577,13 +576,17 @@ export default {
           this.returnOpic = row.otherPicList
           let template = []
           this.progressCount=row.otherPicList.length//上传配图进度条  图片上传成功个数累加
+           console.log(this.ruleForm.otherPicList)
           row.otherPicList.forEach((item, index) => {
             template[index] = { name: item.name, url: item.url }
             template[index].url = item.url
+             console.log(row.otherPicList)
             if (index === row.otherPicList.length - 1) {
               this.ruleForm.otherPicList = template
             }
           })
+                      console.log(this.ruleForm.otherPicList)
+
         } else {
           this.ruleForm.otherPicList = []
         }
@@ -656,6 +659,8 @@ export default {
       // this.ruleForm.mainPicList[0].url = image.url
     },
     SuccessPei(res, file){
+        console.log(this.ruleForm.otherPicList)
+        console.log(this.returnOpic)
        this.progressCount++
        let uf=this.$refs.upload.uploadFiles.length
        console.log(uf)

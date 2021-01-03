@@ -480,11 +480,11 @@ export default {
                 type: 2
             }
             util.ajax
-                .post('v2.0/order/writeSolution', params)
+                .post('v2.0/order/operate', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.logisticsFormVisible = false
-                        this.$message('已提交解决方案')
+                        //this.$message('已提交解决方案')
                         this.getTableData()
                     } else if (parseInt(res.data.code) == 20007) {
                         this.$router.push('/Login')

@@ -201,6 +201,7 @@ export default {
     },
 
     showBigImage(url) {
+        alert(87)
       this.tableListBigImageUrl = url
       this.isShowBigImage = true
     },

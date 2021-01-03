@@ -33,14 +33,14 @@
                     </el-table-column>
                     <el-table-column prop="minPic" label="主图">
                         <template slot-scope="scope">
-                            <div @click="showImageDetail(scope.row.minPic,'zhu')" style="width: 100%; height: 100%;" v-if="scope.row.minPic">
+                            <div @click="showImageDetail([scope.row.minPic])" style="width: 100%; height: 100%;" v-if="scope.row.minPic">
                                 <img style="width: 60px; height: 40px; display: block;" :src="scope.row.minPic" />
                             </div>
                         </template>
                     </el-table-column>
                     <el-table-column prop="mainPic" label="商品图">
                         <template slot-scope="scope">
-                            <el-button type="text" @click="showImageDetail(scope.row.mainPic,'pei')" v-show="scope.row.mainPic.length>0"> 查看图片 </el-button>
+                            <el-button type="text" @click="showImageDetail(scope.row.mainPic)" v-show="scope.row.mainPic.length>0"> 查看图片 </el-button>
                         </template>
                     </el-table-column>
                     <el-table-column prop="ownSpec" label="SKU">
@@ -76,6 +76,17 @@
                     </el-pagination>
                 </div>
             </div>
+            <el-dialog :visible.sync="isShowBigImage" :before-close="handleBigImageClose">
+                <div class="img-wrap">
+                    <el-carousel trigger="click" v-if="bigImageUrlList.length > 1">
+                        <el-carousel-item v-for="(item, index) in bigImageUrlList" :key="index">
+                            <img :src="item" />
+                        </el-carousel-item>
+                    </el-carousel>
+                    <img v-if="bigImageUrlList.length === 1 && bigImageUrlList[0]" :src="bigImageUrlList[0]" />
+
+                </div>
+            </el-dialog>
         </div>
 
     </el-main>
@@ -115,6 +126,9 @@ export default {
             activeName: 'first', //tab切换默认选中的标签
             setTab: true, //是新增商品 or 修改商品
             pageState: {},
+            shelves: '',
+            isShowBigImage: false, //查看图片
+            bigImageUrlList: [],
         }
     },
     filters: {
@@ -215,16 +229,23 @@ export default {
         },
         getTableData() {
             var params = this.getSearchParams()
+            console.log(params)
             util.ajax
                 .post('v2.0/shop/list', params)
                 .then((res) => {
-                    console.log(res)
                     if (parseInt(res.data.code) == 200) {
-                        let list = res.data.data
-                        this.tableList = this.analyzeData(list)
+                        let list = res.data.data.data
+                        this.tableList = this.analyzeData(list) //画表格
                         this.tableData = list
-                        let total = res.data.data.length
+                        let total = res.data.data.data.length
                         this.handleGetTableData(total) // 根据需要增加参数
+                        this.tableData.forEach((item, index) => {
+                            // item.minPic =
+                            //     'http://app-onecar.oss-cn-beijing.aliyuncs.com/oneCar/272aabae-2995-44af-b7ef-c339571dc928.jpg'
+                            // item.mainPic=['http://app-onecar.oss-cn-beijing.aliyuncs.com/oneCar/272aabae-2995-44af-b7ef-c339571dc928.jpg',
+                            //     'http://app-onecar.oss-cn-beijing.aliyuncs.com/1609601350789_672_85026c8694cdea6c447db3ed67856fcb.jpg'
+                            // ]
+                        })
                     } else if (parseInt(res.data.code) == 3002) {
                         this.$router.push('/Login')
                     }
@@ -246,16 +267,6 @@ export default {
                     console.log(err)
                 })
         },
-        showImageDetail(list, type) {
-            if (type == 'zhu') {
-                if (list.length != 0)
-                    return (this.bigImageUrlList = list), (this.isShowBigImage = true)
-            } else {
-                if (list.length != 0)
-                    return (this.bigImageUrlList = list), (this.isShowBigImage = true)
-            }
-        },
-
         analyzeData(list) {
             const newArr = []
             const obj = {}
@@ -302,15 +313,17 @@ export default {
         },
         //商品上下架
         changeStatus(shopId, status) {
+            let value = Number
+            parseInt(status) == 1 ? (value = 2) : (value = 1)
             let params = {
                 shopId: shopId,
-                status: status,
+                status: value,
             }
-            //let order = JSON.stringify({ userId: this.id })
             util.ajax
                 .post('v2.0/shop/status', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
+                        this.$message('操作成功')
                         this.getTableData()
                     }
                 })
@@ -480,28 +493,17 @@ export default {
             this.$refs[formName].resetFields()
             this.showToogle = true
             //清空数据
-            // this.modifyFormLabelAlign = {
-            //   carbrand: '',
-            //   vehicleSystem: [
-            //     {
-            //       vehicleName: '',
-            //       vehicleType: [{ vehicleName: '', endYear: '', beginYear: '' }]
-            //     }
-            //   ],
-            //   imageUrl: '', //上传默认图片路径
-            //   initials: '' //首字母
-            // }
-            // this.addFormLabelAlign = {
-            //   carbrand: '',
-            //   vehicleSystem: [
-            //     {
-            //       vehicleName: '',
-            //       vehicleType: [{ vehicleName: '', endYear: '', beginYear: '' }]
-            //     }
-            //   ],
-            //   imageUrl: '',
-            //   initials: ''
-            // }
+        },
+        //查看图片
+        handleBigImageClose(done) {
+            this.bigImageUrlList = []
+            done()
+        },
+        showImageDetail(list) {
+            if (list.length != 0) {
+                ;(this.bigImageUrlList = list), (this.isShowBigImage = true)
+                console.log(this.bigImageUrlList)
+            }
         },
     },
 }
@@ -718,5 +720,15 @@ export default {
 
 .el-table tbody tr:hover > td {
     background-color: red;
+}
+.car-config >>> .el-dialog .el-dialog__body div.img-wrap {
+    text-align: center;
+}
+
+.car-config >>> .el-dialog .el-dialog__body div.img-wrap img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
 }
 </style>

@@ -61,7 +61,7 @@
                     <div>
                         <p>商品规格:</p>
                         <div class="shop_box" v-for="(item,index) in formLabel.specs" :key="index">
-                            <i class="el-icon-error close_form" @click="closeSpecsVal(index,0,'outer')" ></i>
+                            <i class="el-icon-error close_form" @click="closeSpecsVal(index,0,'outer')"></i>
                             <el-form label-position="right" label-width="100px">
                                 <el-form-item label="规格名：" prop="name">
                                     <div style="width:200px;heigh:30px;">
@@ -102,6 +102,7 @@
                             </el-table-column>
                             <el-table-column prop="specsName3" :label="skusName[2].name" v-if="skusName[2].state">
                             </el-table-column>
+                            
                             <el-table-column prop="commonPrice" label="普通价格（元）">
                                 <template slot-scope="scope">
                                     <input v-model.number="scope.row.commonPrice" type="number" @blur="onBlur($event)" class="table_ipt" style="width:40px">
@@ -144,7 +145,7 @@
                         <el-form label-position="right" label-width="100px">
                             <el-form-item label="运输费：" prop="name">
                                 <div style="width:200px;heigh:30px;">
-                                    <el-input v-model.number="formLabel.postFee" type="number" class="c_ipt" placeholder="不输入则不提供运输"></el-input>
+                                    <el-input v-model="formLabel.postFee" @input="formLabel.postFee=formLabel.postFee.replace(/[^\d]/g,'')" class="c_ipt" placeholder="不输入则不提供运输"></el-input>
                                 </div>
                             </el-form-item>
                             <el-form-item label="其他规格名：" prop="name">
@@ -154,10 +155,10 @@
                             </el-form-item>
                             <el-form-item label="其他规格值：" prop="name">
                                 <div style="overflow:hidden;float:left;">
-                                    <div style="width:200px;heigh:30px;position:relative;margin-bottom:10px;" v-for="(item,j) in formLabel.elseSpecInfos[0].vals" :key="j+'logo'">
+                                    <div style="width:250px;heigh:30px;position:relative;margin-bottom:10px;" v-for="(item,j) in formLabel.elseSpecInfos[0].vals" :key="j+'logo'">
                                         <i class="el-icon-error close_form2" @click="closeSpecsVal(j,0,'other')"></i>
-                                        <el-input v-model="item.value" class="specs_ipt" placeholder="请输入规格值"></el-input>
-                                        <el-input v-model.number="item.price" type="number" class="specs_ipt" placeholder="请输入价格"></el-input>
+                                        <el-input v-model="item.value" class="specs_ipts" placeholder="请输入规格值"></el-input>
+                                        <el-input v-model="item.price" @input="item.price=item.price.replace(/[^\d]/g,'')" class="specs_ipts no_number" placeholder="请输入价格"></el-input>
                                     </div>
                                 </div>
                                 <el-button type="text" @click="addSpecsVal('','other')" style="float:left;">添加规格值</el-button>
@@ -171,12 +172,15 @@
                 <span class="btn_style cancle" @click="btnCancle('form')">取消</span>
             </div>
             <!-- 弹窗 -->
-            <el-dialog :title="boxTitle" :visible.sync="collectbox" width="400px">
+            <el-dialog title="批量设置" :visible.sync="collectbox" width="400px">
                 <el-form ref="form">
-                    <el-form-item label="价格：">
-                        <el-input v-model.number="collectCount" type="number" autocomplete="off" height="20px"></el-input>
+                    
+                    <el-form-item :label="boxTitle" label-width="80px">
+                        <div style="width:200px;float:left">
+                        <el-input v-model="collectCount" @input="collectCount=collectCount.replace(/[^\d]/g,'')" autocomplete="off"></el-input>
+                        </div>
                     </el-form-item>
-                    <el-form-item style="display: flex;justify-content: flex-end">
+                    <el-form-item style="display: flex;margin-left: 94px;">
                         <el-button type="primary" @click="submitCollect('form')">确 定</el-button>
                         <el-button @click="resetCollect('form')">取 消</el-button>
                     </el-form-item>
@@ -211,7 +215,7 @@ export default {
                 skus: [],
                 minPrice: 0,
                 postFee: null,
-                elseSpecInfos: [{ name: '第一', vals: [{ value: '', price: null }] }],
+                elseSpecInfos: [{ name: '', vals: [{ value: '', price: null }] }],
             },
             formRules: {
                 name: [{ required: true, message: '商品名不能为空', trigger: 'blur' }],
@@ -222,7 +226,7 @@ export default {
 
             collect: false,
             collectbox: false,
-            boxTitle: '批量设置：',
+            boxTitle: '价格：',
             collectCount: '', //批量input值
             collectState: true, //true 价格批量，false库存批量
             showProgress: false, //上传配图 进度条
@@ -239,7 +243,8 @@ export default {
                 { name: '', state: false },
                 { name: '', state: false },
             ],
-            falg: true, //区别一列合并还是两列  true 两列， false 一俩
+            flag: true, //区别一列合并还是两列  true 两列， false 一俩
+            skus:[]
         }
     },
     computed: {
@@ -254,34 +259,72 @@ export default {
             }
         },
     },
+     filters: {
+        filtterFei(status) {
+          return status
+        },
+    },
     created: function () {
-        this.initData()
+        this.initData()  
     },
     methods: {
         initData() {
             if (this.$route.query.pageState.state == false) {
                 this.title = '修改商品'
+                this.returnImg=[]
                 let params = new URLSearchParams()
                 let id = parseInt(this.$route.query.pageState.id)
                 util.ajax
                     .get('v2.0/shop/' + id)
                     .then((res) => {
-                        console.log(res.data)
-
                         if (parseInt(res.data.code) == 200) {
-                            this.formLabel = res.data.data
-                            this.formLabel.specs.forEach((item, i) => {
+                            let resData=JSON.parse(JSON.stringify((res.data.data)))
+                            let obj={}
+                            resData.skus.forEach((item,i)=>{
+                                let result=item.specsData.split(',')
+                                let resultIndex=item.indexs.split('_')
+                                switch (result.length){
+                                    case 1:
+                                        this.flag=false;
+                                        item.specsName1=result[0];
+                                        break
+                                    case 2:
+                                        this.flag=true;
+                                        item.specsName1=result[0];
+                                        item.specsName2=result[1];
+                                        break
+                                    case 3:
+                                        this.flag=true;
+                                        item.specsName1=result[0];
+                                        item.specsName2=result[1];
+                                        item.specsName3=result[2];
+                                        break
+                                }
+                            })
+                            resData.mainPic.forEach((item, index) => {
+                                item.url = item.path
+                                let temp = { type: item.type, path: item.path }
+                                this.returnImg.push(temp)
+                            })
+                            resData.descPic.forEach((item, index) => {
+                                item.url = item.path
+                                let temp = { type: item.type, path: item.path }
+                                this.returnImgDes.push(temp)
+                            })
+                            resData.specs.forEach((item, i) => {
                                 this.skusName[i].state = true
                                 this.skusName[i].name = item.name
-                                //dataArray.push(item.vals)
                             })
-                               if(this.formLabel.skus.length>0){
-                                   this.collect=true
-                               }
+                            this.formLabel=resData
+                            this.tableSplit =this.analyzeData(this.formLabel.skus)
+                            if (this.formLabel.skus.length > 0) {
+                                this.collect = true
+                            }
+                            this.progressCount= this.formLabel.mainPic.length; //上传配图 累加计数
+                            this.progressDesCount= this.formLabel.descPic.length; //上传图文介绍  累加计数
                         } else if (parseInt(res.data.code) == 3002) {
                             this.$router.push('/Login')
                         }
-                        
                     })
                     .catch(function (err) {
                         console.log(err)
@@ -306,11 +349,9 @@ export default {
                 this.skusName[2].status = false
             }
         },
-        GOlist(el) {
-            console.log(this.el)
-            //because i want to canjia this pointer sogo
-        },
-        async httpUpload(file) {
+        
+         
+  async httpUpload(file) {
             this.showProgress = false
             this.showProgressDes = false
 
@@ -349,18 +390,14 @@ export default {
             //this.showProgress = false
             var fileName =
                 new Date().getTime() + '_' + Math.ceil(Math.random() * 1000) + '_' + file.file.name
-            console.log(fileName)
             ossClient()
                 .put(fileName, file.file, {
                     ContentType: 'image/jpeg',
                 })
                 .then(({ res, url, name }) => {
                     if (res && res.status == 200) {
-                        console.log(url)
                         let temp = { type: 1, path: url }
-                        // this.formLabel.mainPic.push(temp)
                         this.returnImgDes.push(temp)
-                        console.log(this.returnImgDes)
                     }
                 })
                 .catch((err) => {
@@ -371,57 +408,49 @@ export default {
         successSuolue(res, file) {
             let image = res.data[0]
             this.formLabel.image = image.url
-            console.log(this.formLabel.image)
             this.$forceUpdate()
         },
         successInnerPic(obj, res, file) {
             let image = res.data[0]
-            //specs:[{name:'第一',needPic:1,vals:[{value:'',pic:''}]}]
-
             //要改看改成什么吧
             let outerIndex = obj.outerIndex
             let innerIndex = obj.innerIndex
             this.formLabel.specs[0].vals[innerIndex].pic = image.url
-            console.log(this.formLabel.specs[0].vals[innerIndex].pic)
-            console.log(this.formLabel.specs[0].vals[innerIndex])
             this.$forceUpdate()
         },
         successPei(res, file) {
-            // console.log(8765)
-            // let image ={type:1,url:res.data[0].url}
-            // this.formLabel.mainPic.push(image)
             this.progressCount++
             let uf = this.$refs.upload.uploadFiles.length
             this.showProgress = true
-            console.log(this.progressCount, uf)
             this.progress = (this.progressCount / uf) * 100
-            console.log('百分数', this.progress)
         },
         successDes(res, file) {
+
             this.progressDesCount++
             let uf = this.$refs.upload2.uploadFiles.length
             this.showProgressDes = true
             this.progressDes = (this.progressDesCount / uf) * 100
-            console.log('百分数', this.progressDes)
         },
         //删除图片
         removePic(file) {
             this.formLabel.image = ''
         },
         handleRemove(file, fileList) {
-            this.progress = false
+            this.showProgress = false
             this.progressCount -= 1
             this.returnImg.forEach((item, index) => {
                 if (item.path == file.url) {
-                    this.formLabel.mainPic.splice(index, 1)
+                    this.returnImg.splice(index, 1)
+
                 }
             })
         },
         handleRemoveDes(file, fileList) {
-            this.progressDes = false
+            this.showProgressDes = false
+            this.progressDesCount -= 1
             this.returnImgDes.forEach((item, index) => {
                 if (item.path == file.url) {
-                    this.formLabel.descPic.splice(index, 1)
+                    this.returnImgDes.splice(index, 1)
                 }
             })
         },
@@ -441,21 +470,25 @@ export default {
         beforeUploadAll(file) {
             // console.log(file)
             // if(file.type === 'image/jpeg'|| file.type === 'image/png'){
-            //     const isJPG = file.type === 'image/jpeg'
-            //     const isPng = file.type === 'image/png'
-            //     const isLt500kb = file.size / 1024 < 500
-            //     if (!(isJPG || isPng)) {
-            //         this.$message.error('上传头像图片只能是 JPG, PNG 格式!')
-            //     }
-            //     if (!isLt500kb) {
-            //         this.$message.error('上传头像图片大小不能超过 5kb!')
-            //     }
+               
             // }else if(file.type === 'video/mp4'){
-            //      const isLt50m = file.size / 1024 < 50000
+            //      const isLt50m = file.size / 1024/1024 < 50
             //       if(!isMp4){
-            //         this.$message.error('上传头像图片大小不能超过 5m!')
+            //         this.$message.error('上传头像图片大小不能超过 50m!')
             //     }
             // }
+            //     const isJPG = file.type === 'image/jpeg'
+            //     const isPng = file.type === 'image/png'
+            //     const isMp4 = file.type ==='video/mp4'
+
+            //     const isLt500kb = file.size / 1024/1024 < 50
+            //     console.log(file.size,"___" ,file.size / 1024/1024,isLt500kb)
+            //     if (!(isJPG || isPng || isMp4)) {
+            //         this.$message.error('上传头像图片只能是 JPG, PNG, MP4格式!')
+            //     }
+            //     if (!isLt500kb) {
+            //         this.$message.error('上传文件大小不能超过 50mb!')
+            //     }
             // return (isPng || isJPG) && isLt500kb
         },
         beforeUpload(file) {
@@ -486,7 +519,6 @@ export default {
         },
         //添加规格值
         addSpecsVal(index, type) {
-            console.log(arguments)
             if (type == 'inner') {
                 let temp = { value: '', pic: '' }
                 this.formLabel.specs[index].vals.push(temp)
@@ -501,10 +533,29 @@ export default {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning',
-            }).then(() => {
+            })
+                .then(() => {
                     switch (type) {
                         case 'inner':
-                            this.formLabel.specs[index].vals.splice(innerIndex, 1)
+                            // let value=this.formLabel.specs[index].vals[innerIndex].value
+                            // console.log(this.formLabel.skus)
+                            // this.formLabel.skus.forEach((item,index)=>{
+                            //     console.lg(item)
+                            // //    let result=item.specsData.split(",")
+                            // //    console.lg(item)
+                            // //    console.log(result)
+                            // //    for(let i=0;i<result.length;i++){
+                            // //        console.log(result[i])
+                            // //        if(result[i]==value){
+                            // //            this.formLabel.skus[index].splice(index, 1)
+                            // //        }
+                            // //    }
+                            // })
+
+                            this.formLabel.specs[index].vals.splice(innerIndex, 1)  //删除对应规格
+                            // this.tableSplit=this.analyzeData(this.formLabel.skus)
+                           
+                            
                             break
                         case 'outer':
                             this.formLabel.specs.splice(index, 1)
@@ -525,7 +576,7 @@ export default {
                 })
         },
         objectSpanMethod({ row, column, rowIndex, columnIndex }) {
-            if (this.falg) {
+            if (this.flag) {
                 //true 为合并前两列
                 if (columnIndex < 2) {
                     var split = this.tableSplit.find((item) => {
@@ -549,21 +600,19 @@ export default {
                 return
             }
         },
-        analyzeData(list, number) {
+        analyzeData(list) {
             let splitNodeList = []
             let toSplitField = [
                 // { field: 'id', columnIndex: 0 },
                 { field: 'specsName1', columnIndex: 0 },
                 { field: 'specsName2', columnIndex: 1 },
             ]
-
             toSplitField.forEach((fieldItem) => {
                 let splitNodeListOneColumn = []
                 let splitNode = {
                     specsName1: '',
                     specsName2: '',
                 }
-
                 list.forEach((item, index) => {
                     if (item[fieldItem.field] !== splitNode.columnId) {
                         splitNode.columnId = item[fieldItem.field]
@@ -580,14 +629,12 @@ export default {
 
                 splitNodeList.push(...splitNodeListOneColumn)
             })
-            console.log(splitNodeList)
             return splitNodeList
         },
         //生成规格明细
         createTable() {
             this.collect = true
             this.formLabel.skus = []
-            console.log(this.formLabel.specs)
             let dataArray = []
             this.formLabel.specs.forEach((item, i) => {
                 this.skusName[i].state = true
@@ -596,16 +643,13 @@ export default {
             })
             this.formLabel.skus = this.doExchange(dataArray)
             console.log('共有：' + this.formLabel.skus.length + '种组合！')
-            for (var i = 0; i < this.formLabel.skus.length; i++) {
-                console.log(this.formLabel.skus[i])
-            }
+           
         },
         doExchange(doubleArrays) {
             var len = doubleArrays.length
             let tableData = {}
             if (len == 2) {
-                this.falg = true //合并表格true 为要合并前两列
-                console.log('----', 2)
+                this.flag = true //合并表格true 为要合并前两列
                 var len1 = doubleArrays[0].length
                 var len2 = doubleArrays[1].length
                 var newlen = len1 * len2
@@ -618,6 +662,8 @@ export default {
                             indexs: i + '_' + j,
                             specsName1: doubleArrays[0][i].value,
                             specsName2: doubleArrays[1][j].value,
+                            specsData:
+                                '' + [doubleArrays[0][i].value, doubleArrays[1][j].value] + '',
                             commonPrice: '',
                             vipPrice: '',
                             integral: '',
@@ -633,8 +679,7 @@ export default {
                 this.tableSplit = this.analyzeData(temp)
                 return temp
             } else if (len == 3) {
-                console.log('----', 3)
-                this.falg = true //合并表格true 为要合并前两列
+                this.flag = true //合并表格true 为要合并前两列
                 var len1 = doubleArrays[0].length
                 var len2 = doubleArrays[1].length
                 var len3 = doubleArrays[2].length
@@ -650,6 +695,7 @@ export default {
                                 specsName1: doubleArrays[0][i].value,
                                 specsName2: doubleArrays[1][j].value,
                                 specsName3: doubleArrays[2][k].value,
+                                specsData:'' +[doubleArrays[0][i].value,doubleArrays[1][j].value,doubleArrays[2][k].value] +'',
                                 commonPrice: '',
                                 vipPrice: '',
                                 integral: '',
@@ -665,7 +711,7 @@ export default {
                 this.tableSplit = this.analyzeData(temp)
                 return temp
             } else {
-                this.falg = false //合并表格true 为要合并前两列
+                this.flag = false //合并表格true 为要合并前两列
                 let dataTemp = {}
                 this.skusName[0].state = true
                 this.skusName[0].name = this.formLabel.specs[0].name
@@ -673,6 +719,7 @@ export default {
                     dataTemp = {
                         id: i,
                         specsName1: item.value,
+                        specsData: '' + [item.value] + '',
                         commonPrice: '',
                         vipPrice: '',
                         integral: '',
@@ -688,10 +735,12 @@ export default {
         //批量设置
         openPrice(type) {
             if (type == 'jiage') {
+                this.boxTitle="价格："
                 this.collectCount = ''
                 this.collectState = true
                 this.collectbox = true
             } else {
+                this.boxTitle="库存："
                 this.collectCount = ''
                 this.collectState = false
                 this.collectbox = true
@@ -705,7 +754,6 @@ export default {
                     arr.push(item.commonPrice)
                 }
             })
-            console.log(Math.min.apply(null, arr))
             this.formLabel.minPrice = Math.min.apply(null, arr) //直接Math.max(arr)会报错
         },
         submitCollect() {
@@ -715,8 +763,6 @@ export default {
                 })
                 this.formLabel.minPrice = this.collectCount
             } else {
-                console.log(this.collectCount)
-
                 this.formLabel.skus.forEach((item, index) => {
                     item.stock = this.collectCount
                 })
@@ -729,9 +775,6 @@ export default {
 
         //提交
         btnSubmit(value, formName) {
-            //   this.$refs[formName].validate(valid => {
-
-            //   })
             let template = JSON.parse(JSON.stringify(this.formLabel))
             template.mainPic = this.returnImg
             template.descPic = this.returnImgDes
@@ -739,7 +782,6 @@ export default {
             util.ajax
                 .post('v2.0/shop/renew', params) // 以车型为基准 不是以 id
                 .then((res) => {
-                    console.log(res.data.status)
                     if (parseInt(res.data.status)) {
                         this.$router.push({
                             path: '/ShopingMall',
@@ -752,7 +794,6 @@ export default {
         },
         //取消
         btnCancle(formName) {
-            // console.log(formName)
             this.$refs[formName].resetFields()
             this.showToogle = true
             //清空数据
@@ -1087,5 +1128,33 @@ input::-webkit-inner-spin-button {
     margin-right: 10px;
     line-height: 30px;
     cursor: pointer;
+}
+.specs_ipts{
+    width:119px
+}
+
+/*在Chrome下移除input[number]的上下箭头*/
+.car-config-change >>> .no-number input ::-webkit-outer-spin-button,
+.car-config-change >>> .no-number input ::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none !important;
+}
+ 
+.car-config-change >>> .no-number input[type="number"]::-webkit-outer-spin-button,
+.car-config-change >>> .no-number input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none !important;
+}
+ 
+/*在firefox下移除input[number]的上下箭头*/
+.no-number {
+  -moz-appearance: textfield;
+}
+ 
+.no-number input[type="number"] {
+  -moz-appearance: textfield;
+}
+.car-config-change >>>.no-number .el-input__inner{
+widows: 500px;
 }
 </style>
