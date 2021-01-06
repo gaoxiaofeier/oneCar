@@ -76,9 +76,6 @@
                         </template>
                     </el-table-column>
                     <el-table-column prop="buyTime" label="购买时间" width="102px">
-                        <template slot-scope="scope">
-                            {{scope.row.buyTime|timeFiltersTime}}
-                        </template>
                     </el-table-column>
                     <el-table-column prop="paymentType" label="支付方式" width="110" sortable>
                         <template slot-scope="scope">
@@ -386,10 +383,8 @@ export default {
                         })
                         this.tableData = list
                         let total = res.data.data.total||0
-                        console.log(total)
-
                         this.handleGetTableData(total)
-                    } else if (parseInt(res.data.code) == 3002) {
+                    } else if (parseInt(res.data.code) == 3003) {
                         this.$router.push('/Login')
                     }
                 })
@@ -400,7 +395,6 @@ export default {
 
         handleGetTableData(total) {
             this.pagination.total = total
-            console.log(total)
         },
         //取消订单
         cancelOrder(orderId) {
@@ -414,7 +408,7 @@ export default {
                     if (parseInt(res.data.code) == 200) {
                         this.$message('取消订单成功')
                         this.getTableData()
-                    } else if (parseInt(res.data.code) == 20007) {
+                    } else if (parseInt(res.data.code) == 3003) {
                         this.$router.push('/Login')
                     }else{
                         this.$message('取消订单失败')
@@ -444,7 +438,7 @@ export default {
                         this.logisticsFormVisible = false
                         this.$message('发货成功')
                         this.getTableData()
-                    } else if (parseInt(res.data.code) == 20007) {
+                    } else if (parseInt(res.data.code) == 3003) {
                         this.$router.push('/Login')
                     }
                 })
@@ -475,7 +469,7 @@ export default {
                         this.solutionFormVisible = false
                         this.$message('已提交解决方案')
                         this.getTableData()
-                    } else if (parseInt(res.data.code) == 20007) {
+                    } else if (parseInt(res.data.code) == 3003) {
                         this.$router.push('/Login')
                     }
                 })
@@ -501,7 +495,7 @@ export default {
                     if (parseInt(res.data.code) == 200) {
                         this.logisticsFormVisible = false
                         this.getTableData()
-                    } else if (parseInt(res.data.code) == 20007) {
+                    } else if (parseInt(res.data.code) == 3003) {
                         this.$router.push('/Login')
                     }
                 })
@@ -521,10 +515,8 @@ export default {
                     if (parseInt(res.data.code) == 200) {
                         this.$message('返回已发货状态')
                         this.getTableData()
-                    } else if (parseInt(res.data.code) == 20007) {
+                    } else if (parseInt(res.data.code) == 3003) {
                         this.$router.push('/Login')
-                    }else{
-                        this.$message('返回已发货失败')
                     }
                 })
                 .catch(function (err) {
@@ -534,9 +526,7 @@ export default {
         //点击备注修改
         changeH(id) {
           this.remarkVisible = true  //备注弹窗
-          this.remarkId = parseInt(id)
-
-          
+          this.remarkId = id
         },
         resetRemark() {
           this.remarkVisible = false
@@ -554,6 +544,8 @@ export default {
                         this.remarkVisible = false
                         this.$message('备注修改成功')
                         this.getTableData()
+                    }else if (res.data.code == 3003) {
+                        this.$router.push('/Login')
                     }
                 })
                 .catch(function (err) {

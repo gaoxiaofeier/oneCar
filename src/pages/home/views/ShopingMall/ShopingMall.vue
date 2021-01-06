@@ -23,7 +23,7 @@
 
                         </div>
                         <div style="float:right">
-                            <div style="float:right;width:200px;">
+                            <!-- <div style="float:right;width:200px;">
                                 <el-table :data="typeTable" style="width: 100%" :border="true" :highlight-current-row='false'>
                                     <el-table-column prop="name" label="类别" style="">
                                     </el-table-column>
@@ -40,9 +40,10 @@
                                         </template>
                                     </el-table-column>
                                 </el-table>
-                            </div>
+                            </div> -->
+
                             <div style="float:right;text-align:right;margin-right:10px;">
-                                <el-button type="primary" @click="addType('new')">新增类别</el-button>
+                                <el-button type="primary" @click="shopType()">类别管理</el-button>
                             </div>
                         </div>
                     </el-row>
@@ -82,8 +83,14 @@
                         </template>
                     </el-table-column>
                     <el-table-column prop="commonPrice" label="普通价格">
+                        <template slot-scope="scope">
+                            {{scope.row.commonPrice | priceFilter}}
+                        </template>
                     </el-table-column>
                     <el-table-column prop="vipPrice" label="会员价格">
+                        <template slot-scope="scope">
+                            {{scope.row.vipPrice | priceFilter}}
+                        </template>
                     </el-table-column>
                     <el-table-column prop="integral" label="积分上限">
                     </el-table-column>
@@ -92,7 +99,7 @@
                     <el-table-column prop="id" label="操作">
                         <template slot-scope="scope">
                             <div style="text-align:center">
-                                <el-button type="text" @click="changeStatus(scope.row.id,scope.row.status)" style="marin-left:10px;">
+                                <el-button type="text" @click="changeStatus(scope.row)" style="marin-left:10px;">
                                     {{scope.row.status | statusFilter}}
                                 </el-button>
                                 <el-button type="text" @click="pageTab(false,scope.row.id)">
@@ -145,6 +152,30 @@
                     </el-form-item>
                 </el-form>
             </el-dialog>
+            <!-- 商品类别 -->
+            <el-dialog title="商品类别:" :visible.sync="typeShopBox" width="280px">
+                <div style="float:right;text-align:right;margin-right:10px; position:absolute;left:136px;top:20px;">
+                    <el-button type="primary" @click="addType('new')" size="mini">新增类别</el-button>
+                </div>
+                <div style="width:220px; overflow:hidden">
+                    <el-table :data="typeTable" style="width: 100%" :border="true" :highlight-current-row='false'>
+                        <el-table-column prop="name" label="类别" style="">
+                        </el-table-column>
+                        <el-table-column label="操作" width='90px'>
+                            <template slot-scope="scope">
+                                <div style="text-align:center">
+                                    <el-button type="text" @click="addType('change',scope.row)">
+                                        修改
+                                    </el-button>
+                                    <el-button type="text" @click="typeDelete(scope.row.id)">
+                                        删除
+                                    </el-button>
+                                </div>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </el-dialog>
         </div>
 
     </el-main>
@@ -194,6 +225,7 @@ export default {
             typeTable: [],
             categoryOper: false, //true 新增类别   false修改类别
             categoryId: '', //修改类别的id
+            typeShopBox: false,
         }
     },
     filters: {
@@ -211,10 +243,22 @@ export default {
         },
         statusFilter(val) {
             if (parseInt(val) == 1) {
-                return '上架'
-            } else {
                 return '下架'
+            } else {
+                return '上架'
             }
+        },
+        priceFilter(value) {
+            let temp = (value / 100).toString()
+            if (temp.indexOf('.') < 0) {
+                //没有小数点的整数
+                temp = parseFloat(temp).toFixed(2)
+            } else {
+                //小数  input上面已经限制了最多输入两位小数，所以value的值最多是两位
+                let arr = temp.split('.')
+                arr[1].length == 1 ? (temp = temp + '0') : temp
+            }
+            return temp
         },
     },
     computed: {
@@ -265,15 +309,17 @@ export default {
             })
                 .then(() => {
                     let params = new URLSearchParams()
-                    let ids = parseInt(id)
+                    let ids = id
                     params.append('shopId', ids)
                     util.ajax
-                        .delete('v2.0/shop/' + ids) // 以车型为基准 不是以 id
+                        .delete('v2.0/shop/' + ids)
                         .then((res) => {
-                            console.log(res)
+                            console.log(typeof res.data.code)
                             if (parseInt(res.data.code) == 200) {
                                 this.$message('删除成功')
                                 this.getTableData()
+                            } else if (res.data.code == 3003) {
+                                this.$router.push('/Login')
                             }
                         })
                         .catch(function (err) {
@@ -295,30 +341,21 @@ export default {
         },
         getTableData() {
             var params = this.getSearchParams()
-            console.log(params)
             util.ajax
                 .post('v2.0/shop/list', params)
                 .then((res) => {
-                    if (parseInt(res.data.code) == 200) {
-                        let list = res.data.data.data
-                        this.tableList = this.analyzeData(list) //画表格
-                        this.tableData = list
-                        let total = res.data.data.total
-                        this.handleGetTableData(total) // 根据需要增加参数
-                        // this.tableData.forEach((item, index) => {
-                        //     console.log(item.mainPic)
-                        //     let newArr=item.mainPic
-                        //     let returnArr=[]
-                        //     newArr.forEach((inner,index)=>{
-                        //        returnArr.push(inner.path)
-                        //     })
-                        //     console.log(returnArr)
-                        //     item.mainPic=returnArr
-                        //     // item.image =
-                        //     //     'http://app-onecar.oss-cn-beijing.aliyuncs.com/oneCar/272aabae-2995-44af-b7ef-c339571dc928.jpg'
-                        //     //item.mainPic=["http://app-onecar.oss-cn-beijing.aliyuncs.com/1609651419443_950_011fb337c2f5d0d0463f1ba79e4d9808.jpg"]
-                        // })
-                    } else if (parseInt(res.data.code) == 3002) {
+                    if (res.data.code == 200) {
+                        if (res.data.data) {
+                            //data没值返回null
+                            let list = res.data.data.data
+                            this.tableList = this.analyzeData(list) //画表格
+                            this.tableData = list
+                            let total = res.data.data.total
+                            this.handleGetTableData(total) // 根据需要增加参数
+                        } else {
+                            this.tableData = []
+                        }
+                    } else if (res.data.code == 3003) {
                         this.$router.push('/Login')
                     }
                 })
@@ -332,8 +369,11 @@ export default {
                 .get('v2.0/shop/category/list')
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
-                        this.category = res.data.data
+                        this.category = JSON.parse(JSON.stringify(res.data.data))
+                        this.category.unshift({ id: '', name: '所有商品类别' })
                         this.typeTable = res.data.data
+                    } else if (res.data.code == 3003) {
+                        this.$router.push('/Login')
                     }
                 })
                 .catch(function (err) {
@@ -385,11 +425,11 @@ export default {
             this.total = total
         },
         //商品上下架
-        changeStatus(shopId, status) {
+        changeStatus(row) {
             let value = Number
-            parseInt(status) == 1 ? (value = 2) : (value = 1)
+            row.status == 1 ? (value = 2) : (value = 1)
             let params = {
-                shopId: shopId,
+                shopId: row.id,
                 status: value,
             }
             util.ajax
@@ -398,6 +438,8 @@ export default {
                     if (parseInt(res.data.code) == 200) {
                         this.$message('操作成功')
                         this.getTableData()
+                    } else if (res.data.code == 3003) {
+                        this.$router.push('/Login')
                     }
                 })
                 .catch(function (err) {
@@ -413,12 +455,11 @@ export default {
             if (list.length != 0) {
                 this.bigImageUrlList = list
                 this.isShowBigImage = true
-                console.log(this.bigImageUrlList)
             }
         },
         //商品类别增删改
         addType(type, value) {
-            if (type == 'add') {
+            if (type == 'new') {
                 this.categoryOper = true
                 this.typeCount = ''
             } else {
@@ -442,6 +483,8 @@ export default {
                             this.$message('操作成功')
                             this.typeBox = false
                             this.categoryList()
+                        } else if (res.data.code == 3003) {
+                            this.$router.push('/Login')
                         }
                     })
                     .catch(function (err) {
@@ -459,6 +502,8 @@ export default {
                             this.$message('操作成功')
                             this.typeBox = false
                             this.categoryList()
+                        }else if (res.data.code == 3003) {
+                            this.$router.push('/Login')
                         }
                     })
                     .catch(function (err) {
@@ -472,19 +517,34 @@ export default {
         },
         //删除
         typeDelete(id) {
-            let ids = parseInt(id)
-            util.ajax
-                .delete('v2.0/shop/category/' + ids) //
-                .then((res) => {
-                    console.log(res)
-                    if (parseInt(res.data.code) == 200) {
-                        this.$message('删除成功')
-                        this.categoryList()
-                    }
+            this.$confirm('确认删除此类别么？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+                .then(() => {
+                    let ids = parseInt(id)
+                    util.ajax
+                        .delete('v2.0/shop/category/' + ids) //
+                        .then((res) => {
+                            if (parseInt(res.data.code) == 200) {
+                                this.$message('删除成功')
+                                this.categoryList()
+                            }else if (res.data.code == 3003) {
+                                this.$router.push('/Login')
+                            }
+                        })
+                        .catch(function (err) {
+                            console.log(err)
+                        })
                 })
-                .catch(function (err) {
-                    console.log(err)
+                .catch(() => {
+                    return
                 })
+        },
+        //商品类别按钮
+        shopType() {
+            this.typeShopBox = true
         },
     },
 }

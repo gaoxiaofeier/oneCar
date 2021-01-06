@@ -304,7 +304,6 @@ export default {
           if (parseInt(res.data.code) == 301000) {
             res.data.data.dataList.forEach((item, index) => {
               let temp = { value: item.trackId, label: item.trackName }
-              console.log(temp)
               this.saidao_w.push(temp)
             })
           }

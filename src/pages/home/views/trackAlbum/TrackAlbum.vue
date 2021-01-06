@@ -102,13 +102,11 @@
           <el-input type="textarea" v-model="ruleForm.content" style="width:220px;"></el-input>
         </el-form-item>
         <el-form-item label="上传配图：" class="lable_zhu">
-         
           <el-upload action="#" ref="upload" multiple :on-success="SuccessPei" :before-upload="beforeUpload" :http-request="httpUpload" list-type="picture-card" :on-remove="handleRemove" :file-list="ruleForm.picList">
               <div class="hidden"   @click="pointHidden">
                 <i class="el-icon-plus"></i>
               </div>
           </el-upload>
-         
           <div style="width:303px">
                 <el-progress
                   v-show="showProgress"

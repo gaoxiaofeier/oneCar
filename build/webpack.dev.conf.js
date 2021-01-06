@@ -1,3 +1,11 @@
+/*
+ * @Descripttion: 
+ * @version: X3版本
+ * @Author: GaoFei
+ * @Date: 2020-02-20 00:35:44
+ * @LastEditors: GaoFei
+ * @LastEditTime: 2021-01-05 15:50:53
+ */
 'use strict'
 const utils = require('./utils')
 const webpack = require('webpack')
@@ -23,6 +31,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   // these devServer options should be customized in /config/index.js
   devServer: {
     clientLogLevel: 'warning',
+    disableHostCheck: true,
     historyApiFallback: {
       rewrites: [
         { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html') },
