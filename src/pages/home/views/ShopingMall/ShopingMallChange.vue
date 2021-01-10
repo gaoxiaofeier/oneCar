@@ -12,8 +12,8 @@
                         </el-form-item>
                         <el-form-item label="商品类别：">
                             <div style="width:200px;heigh:30px;">
-                                <el-select v-model="formLabel.categoryName" placeholder="请选择类别">
-                                    <el-option v-for="(item ,index) of this.category" :key="index+'a'" :label="item.name" :value="item.id"></el-option>
+                                <el-select v-model="formLabel.categoryId" placeholder="请选择类别">
+                                    <el-option v-for="(item ,index) of this.category" :key="index+'a'" :label="item.label" :value="item.value"></el-option>
                                 </el-select>
                                 <!-- <el-input v-model="formLabel.categoryName" class="c_ipt"></el-input> -->
                             </div>
@@ -154,7 +154,7 @@
                                         <draggable v-model="item.vals">
                                             <transition-group>
                                                 <div style="width:250px;heigh:30px;position:relative;margin-bottom:10px;" v-for="(innerItem,innerIndex) in item.vals" :key="innerIndex+'li'">
-                                                    <i class="el-icon-error close_form2" @click="closeSpecsVal(innerIndex,0,'other')"></i>
+                                                    <i class="el-icon-error close_form2" @click="closeSpecsVal(index,innerIndex,'outerInner')"></i>
                                                     <el-input v-model="innerItem.value" class="specs_ipts" placeholder="请输入规格值"></el-input>
                                                     <el-input v-model="innerItem.price" @input="innerItem.price=innerItem.price.replace(/^\D*(\d*(?:\.\d{0,2})?).*$/g, '$1')" class="specs_ipts no_number" placeholder="请输入价格"></el-input>
 
@@ -181,7 +181,7 @@
                 <el-form ref="form">
                     <el-form-item :label="boxTitle" label-width="80px">
                         <div style="width:200px;float:left">
-                            <el-input v-model="collectCount" @input="collectCount=collectCount.replace(/^\D*(\d*(?:\.\d{0,2})?).*$/g, '$1')" autocomplete="off" @blur.native.capture="setNumber(collectCount)"></el-input>
+                            <el-input v-model="collectCount" @input="collectCount=collectCount.replace(/^\D*(\d*(?:\.\d{0,2})?).*$/g, '$1')" autocomplete="off" ></el-input>
                         </div>
                     </el-form-item>
                     <el-form-item style="display: flex;margin-left: 94px;">
@@ -280,7 +280,10 @@ export default {
                 .get('v2.0/shop/category/list')
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
-                        this.category = res.data.data
+                        res.data.data.forEach((item, index) => {
+                          let temp = { value: item.id, label: item.name }
+                          this.category.push(temp)
+                        })
                     }else if (res.data.code == 3003) {
                                 this.$router.push('/Login')
                             }
@@ -348,6 +351,7 @@ export default {
                             }
                             this.progressCount= this.formLabel.mainPic.length; //上传配图 累加计数
                             this.progressDesCount= this.formLabel.descPic.length; //上传图文介绍  累加计数
+                            // 以下为修改数据格式
                             if (!this.formLabel.elseSpecInfos.length) {
                                 this.formLabel.elseSpecInfos = [
                                     { name: '', vals: [{ value: '', price: null }] },
@@ -358,6 +362,12 @@ export default {
                                 item.vipPrice=item.vipPrice/100
                                 item.commonPrice=item.commonPrice/100
                             })
+                            this.formLabel.elseSpecInfos.forEach((item,index)=>{
+                                item.vals.forEach((inner,index)=>{
+                                    inner.price=inner.price/100
+                                })
+                            })  
+                            this.formLabel.postFee=this.formLabel.postFee/100
                         } else if (parseInt(res.data.code) == 3003) {
                             this.$router.push('/Login')
                         }
@@ -533,14 +543,14 @@ export default {
         beforeUpload(file) {
             const isJPG = file.type === 'image/jpeg'
             const isPng = file.type === 'image/png'
-            const isLt500kb = file.size / 1024 < 500
+            const isLt5Mb = file.size / 1024/1024 < 5
             if (!(isJPG || isPng)) {
                 this.$message.error('上传头像图片只能是 JPG, PNG 格式!')
             }
-            if (!isLt500kb) {
-                this.$message.error('上传头像图片大小不能超过 500kb!')
+            if (!isLt5Mb) {
+                this.$message.error('上传头像图片大小不能超过 5Mb!')
             }
-            return (isPng || isJPG) && isLt500kb
+            return (isPng || isJPG) && isLt5Mb
         },
         //添加规格
         addSpecs(type) {
@@ -620,8 +630,10 @@ export default {
                             this.formLabel.elseSpecInfos.splice(index, 1)
                             
                             break
-                        case 'other':
-                            this.formLabel.elseSpecInfos[index].vals.splice(index, 1)
+                        case 'outerInner':
+                            console.log(innerIndex)
+                            console.log(this.formLabel.elseSpecInfos[index].vals[innerIndex])
+                            this.formLabel.elseSpecInfos[index].vals.splice(innerIndex, 1)
                             break
                     }
                 })
@@ -858,7 +870,7 @@ export default {
                 template.mainPic = this.returnImg;
                 template.descPic = this.returnImgDes;
                 template.minPrice=template.minPrice*100;
-                template.vipPrice=template.vipPrice*100;
+                template.postFee=template.postFee*100
                 template.skus.forEach((item,index)=>{
                     item.commonPrice=item.commonPrice*100;
                     item.vipPrice=item.vipPrice*100;
@@ -866,6 +878,16 @@ export default {
                 template.elseSpecInfos.forEach((item,i)=>{// 其他规格名是空的，去掉
                     if(item.name==''){
                         template.elseSpecInfos.splice(i,1);
+                    }
+                    item.vals.forEach((inner,index)=>{ //价格乘以100传给后台
+                        inner.price=inner.price*100
+                    })
+                })
+                //根据类别id，增加类别名称   this.category
+                this.category.forEach((item,index)=>{
+                    if(item.value==template.categoryId){
+                        console.log(item.value)
+                        template.categoryName=item.label
                     }
                 })
                 let flag=0

@@ -249,14 +249,17 @@ export default {
             }
         },
         priceFilter(value) {
-            let temp = (value / 100).toString()
-            if (temp.indexOf('.') < 0) {
-                //没有小数点的整数
-                temp = parseFloat(temp).toFixed(2)
-            } else {
-                //小数  input上面已经限制了最多输入两位小数，所以value的值最多是两位
-                let arr = temp.split('.')
-                arr[1].length == 1 ? (temp = temp + '0') : temp
+            let temp=null
+            if(value!=null){
+                temp = (value / 100).toString()
+                if (temp.indexOf('.') < 0) {
+                    //没有小数点的整数
+                    temp = parseFloat(temp).toFixed(2)
+                } else {
+                    //小数  input上面已经限制了最多输入两位小数，所以value的值最多是两位
+                    let arr = temp.split('.')
+                    arr[1].length == 1 ? (temp = temp + '0') : temp
+                }
             }
             return temp
         },

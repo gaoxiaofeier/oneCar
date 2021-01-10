@@ -333,6 +333,7 @@ export default {
       }
     },
     modifyOpenBox(row) {
+        console.log(row)
       this.boxTitle = '修改记录'
       let lap = row.lapTime
       if (lap) {
