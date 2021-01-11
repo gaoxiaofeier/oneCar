@@ -458,7 +458,7 @@ export default {
                   item.vipType = '年费会员'
                 }
                 if (item.vip2) {
-                  item.vipType = '畅跑会员'
+                  item.vipType = '畅跑会员' 
                 }
               }
             })

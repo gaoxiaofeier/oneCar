@@ -65,7 +65,7 @@ export default {
           util.ajax
             .get('admin/login?' + params)
             .then(res => {
-              if (parseInt(res.data.code) == 301000) {
+              if (parseInt(res.data.code) == 301000) { 
                 // 登出的时候 一定要把 hasLogin 改成 false
                 localStorage.setItem('hasLogin', true)
                 localStorage.setItem('token', res.data.data.token)

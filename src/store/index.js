@@ -1,3 +1,11 @@
+/*
+ * @Descripttion: 
+ * @version: X3版本
+ * @Author: GaoFei
+ * @Date: 2020-02-19 23:22:10
+ * @LastEditors: GaoFei
+ * @LastEditTime: 2021-01-11 22:37:29
+ */
 import Vue from 'vue'
 import Vuex from 'vuex'
 
@@ -21,7 +29,7 @@ let initState = {
   userName: localStorage.getItem("userName") || ''
 };
 
-
+ 
 
 
 const store = new Vuex.Store({
@@ -76,9 +84,6 @@ const store = new Vuex.Store({
       state.uploadImage = image
 
     }
-
-
-
   },
   modules
 

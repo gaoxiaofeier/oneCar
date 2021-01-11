@@ -9,7 +9,6 @@
                                 <el-input v-model="search.phone" style="width:150px;"></el-input>
                             </el-form-item>
                         </el-col>
-
                         <el-col :span="5" :offset="1">
                             <el-form-item label="昵称：" label-width="60px">
                                 <el-input v-model="search.nickName" style="width:150px;"></el-input>
@@ -25,7 +24,7 @@
                         </el-col>
                     </el-row>
                     <el-row>
-                        <el-col :span="8" :offset="3">
+                        <el-col :span="8" >
                             <el-form-item label="购买时间：" label-width="90px">
                                 <el-date-picker v-model="search.payTime" type="daterange" range-separator="~" start-placeholder="开始日期" end-placeholder="结束日期">
                                 </el-date-picker>
@@ -37,8 +36,9 @@
             <el-row style="padding-left:0px;margin-bottom:10px;">
                 <div class="tab_btn">
                     <span class="tb" :class="{'nactive': search.paymentType === 0}" @click="chooseTab1(0)">全部</span>
-                    <span class="tb" :class="{'nactive': search.paymentType === 1}" @click="chooseTab1(1)">微信</span>
-                    <span class="tb" :class="{'nactive': search.paymentType === 2}" @click="chooseTab1(2)">支付宝</span>
+                    <span class="tb" :class="{'nactive': search.paymentType === 1}" @click="chooseTab1(1)">支付宝</span>
+                    <span class="tb" :class="{'nactive': search.paymentType === 2}" @click="chooseTab1(2)">微信</span>
+
                 </div>
                 <div class="tab_btn" style="width:380px;">
                     <span class="tb" :class="{'nactive': search.status === 0}" @click="chooseTab2(0)">全部</span>
@@ -92,6 +92,11 @@
                     <el-table-column prop="num" label="数量" width="80">
                     </el-table-column>
                     <el-table-column prop="shippingCode" label="物流单号" width="80">
+                        <template slot-scope="scope">
+                            <div @click="changeCode(scope.row)" type="text" size="small" style="min-height:50px;line-height:50px;cursor:pointer;width:100%">
+                              {{scope.row.shippingCode}}
+                            </div>
+                        </template>
                     </el-table-column>
                     <el-table-column prop="solution" label="协商结果" width="80">
                     </el-table-column>
@@ -107,9 +112,9 @@
                             {{scope.row.status|formateStatus}}
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="120">
+                    <el-table-column label="操作" width="140px" fixed="right">
                         <template slot-scope="scope">
-                            <el-button type="text" v-if="scope.row.delivery" @click="deliveryBtn(scope.row.orderId)" class="status_btn">已发货</el-button>
+                            <el-button type="text" v-if="scope.row.delivery" @click="deliveryBtn(scope.row)" class="status_btn">已发货</el-button>
                             <el-button type="text" v-if="scope.row.sure" class="status_btn" @click="haveProblem(scope.row.orderId)">有问题</el-button>
                             <div v-if="scope.row.solve">
                                 <el-button type="text" class="status_btn" @click="noProblem(scope.row.orderId)">无问题</el-button>
@@ -214,6 +219,7 @@ export default {
             remarkVisible:false, //备注弹窗
             remarkBox:'',  //备注弹窗input
             remarkId:Number, //备注弹窗传的id
+            opType:null, //物流状态，  1：填写单号 2：修改单号
         }
     },
     filters: {
@@ -234,9 +240,6 @@ export default {
                 return 0
             }
         },
-        formateHandle(data) {
-            console.log(data)
-        },
         elseSpec(val) {
             if (val == null || val == '') {
                 return ''
@@ -252,10 +255,10 @@ export default {
         payType(val) {
             switch (val) {
                 case 1:
-                    return '微信'
+                    return '支付宝'
                     break
                 case 2:
-                    return '支付宝'
+                    return '微信'
                     break
             }
         },
@@ -419,17 +422,18 @@ export default {
                 })
         },
         //已发货
-        deliveryBtn(orderId) {
-            alert(89)
+        deliveryBtn(row) {
             this.logisticsFormVisible = true
-            this.orderIId = orderId
+            this.logistics= row.shippingCode
+            this.orderIId = row.orderId
+            this.opType=1
         },
         //物流弹窗提交
         submitLogistics() {
             var params = {
                 orderId: this.orderIId,
                 shippingCode: this.logistics,
-                opType:1
+                opType:this.opType
             }
             util.ajax
                 .post('v2.0/order/writeShipping', params)
@@ -451,6 +455,19 @@ export default {
         resetLogistics() {
             this.logistics = ''
             this.logisticsFormVisible = false
+        },
+        //修改物流单号
+        changeCode(row){
+            if(row.status==4||row.status==5||row.status==6){
+                this.logisticsFormVisible = true;
+                this.logistics= row.shippingCode;
+                this.orderIId = row.orderId;
+                this.opType=2
+            }else{
+                this.$message('待发货，不能填写物流')
+                return;
+            }
+
         },
         //解决方案弹窗
         solutionBtn(orderId){
@@ -623,9 +640,12 @@ export default {
     cursor: pointer;
 }
 .status_btn {
-    width: 60px;
+    width: 55px;
     text-align: left;
     float: left;
+    margin-left: 0px;
+}
+.el-button+.el-button {
     margin-left: 0px;
 }
 </style>
