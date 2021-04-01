@@ -406,7 +406,6 @@ export default {
             util.ajax
               .get('file/downFile?' + params)
               .then(res => {
-                alert(99)
                 this.img.url = res.config.url
                 console.log(this.img)
                 this.ruleForm.picList.push(this.img)

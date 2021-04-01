@@ -101,7 +101,8 @@ export default {
         '活动管理',
         '订单管理',
         '赛道影像',
-        '车速排名'
+        '车速排名',
+        'TRACKFUN商城',
       ],
       formLabelWidth: '80px',
       detailPower: ['管理员']
@@ -141,7 +142,8 @@ export default {
             '活动管理',
             '订单管理',
             '赛道影像',
-            '车速排名'
+            '车速排名',
+            'TRACKFUN商城',
           ]
         } else {
           this.form.permissionList = this.detailPower
@@ -176,6 +178,7 @@ export default {
               })
           } else {
             let params = JSON.stringify(this.form)
+            console.log(this.form)
             util.ajax
               .post('admin/updateAdmin', params)
               .then(res => {
@@ -211,7 +214,7 @@ export default {
           if (parseInt(res.data.code) == 301000) {
             res.data.data.forEach((item, index) => {
               if (item.permissionList) {
-                if (item.permissionList.length == 8) {
+                if (item.permissionList.length == 9) {
                   item.power = '全部'
                 } else {
                   item.power = '部分权限'
@@ -237,7 +240,7 @@ export default {
         this.dialogFormVisible = true
         this.detailPower = ['用户管理']
         if (row.permissionList) {
-          if (row.permissionList.length == 8) {
+          if (row.permissionList.length == 9) {
             this.powerForm = 0
           } else {
             this.powerForm = 1
@@ -247,6 +250,7 @@ export default {
           this.powerForm = 1
           row.permissionList = this.detailPower
         }
+        console.log(row)
         this.form = row
       } else {
         this.dialogFormVisible = true

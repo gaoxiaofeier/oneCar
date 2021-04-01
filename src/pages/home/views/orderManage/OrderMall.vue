@@ -353,7 +353,7 @@ export default {
         getTableData() {
             var gather = this.getSearchParams()
             util.ajax
-                .post('/v2.0/order/list', gather)
+                .post('/order/list', gather)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         let list = res.data.data.data
@@ -406,7 +406,7 @@ export default {
                 type: 1
             }
             util.ajax
-                .post('v2.0/order/operate', params)
+                .post('order/operate', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.$message('取消订单成功')
@@ -436,7 +436,7 @@ export default {
                 opType:this.opType
             }
             util.ajax
-                .post('v2.0/order/writeShipping', params)
+                .post('order/writeShipping', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.logisticsFormVisible = false
@@ -480,7 +480,7 @@ export default {
                 solution: this.solution
             }
             util.ajax
-                .post('v2.0/order/writeSolution', params)
+                .post('order/writeSolution', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.solutionFormVisible = false
@@ -507,7 +507,7 @@ export default {
                 type: 2
             }
             util.ajax
-                .post('v2.0/order/operate', params)
+                .post('order/operate', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.logisticsFormVisible = false
@@ -527,7 +527,7 @@ export default {
                 type: 3
             }
             util.ajax
-                .post('v2.0/order/operate', params)
+                .post('order/operate', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.$message('返回已发货状态')
@@ -555,7 +555,7 @@ export default {
                     remark:this.remarkBox
                 }
             util.ajax
-                .post('v2.0/order/writeRemark', params) // 以车型为基准 不是以 id
+                .post('order/writeRemark', params) // 以车型为基准 不是以 id
                 .then((res) => {
                    if (parseInt(res.data.code) == 200) {
                         this.remarkVisible = false

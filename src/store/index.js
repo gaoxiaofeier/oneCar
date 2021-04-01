@@ -4,7 +4,7 @@
  * @Author: GaoFei
  * @Date: 2020-02-19 23:22:10
  * @LastEditors: GaoFei
- * @LastEditTime: 2021-01-11 22:37:29
+ * @LastEditTime: 2021-01-11 23:19:59
  */
 import Vue from 'vue'
 import Vuex from 'vuex'
@@ -25,7 +25,7 @@ const modules = modulesFiles.keys().reduce((modules, modulePath) => {
 let hasLogin = localStorage.getItem("hasLogin");
 let initState = {
   token: localStorage.getItem("token") ||'',
-  permission: localStorage.getItem("permission") || [],
+  permission: localStorage.getItem("permissionSelf") || [],
   userName: localStorage.getItem("userName") || ''
 };
 
@@ -37,7 +37,7 @@ const store = new Vuex.Store({
   state: {
     //初始值、存放的东西
     token: initState.token,
-    permission: initState.permission,
+    // permission: initState.permission,
     userName: initState.userName,
     golbleImage: 'http://test.onecar.static.dp20.cn/',//下载图片路径
     uploadImage: 'http://app.onecar.fun/api/v1.0/'  //上传图片路径
@@ -48,7 +48,7 @@ const store = new Vuex.Store({
     //     return state.title;
     // }
     token: state => state.token,
-    permission: state => state.permission,
+    // permission: state => state.permission,
     userName: state => state.userName,
     golbleImage: state => state.golbleImage,
     uploadImage: state => state.uploadImage

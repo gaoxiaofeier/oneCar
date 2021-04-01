@@ -366,12 +366,6 @@ export default {
         .then(res => {
           if (parseInt(res.data.code) == 301000) {
             this.tableTwo = res.data.data.data
-            this.tableTwo.forEach((item, index) => {
-              if (item.picList) {
-                item.picList[0].url = `${this.$store.getters.golbleImage}file/downFile?url=${item.picList[0].url}&name=${item.picList[0].name}`
-              }
-            })
-            // this.tableTwo = template
           }
         })
         .catch(function(err) {

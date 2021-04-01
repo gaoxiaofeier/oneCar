@@ -275,7 +275,7 @@ export default {
         initData() {
             //类别
               util.ajax
-                .get('v2.0/shop/category/list')
+                .get('shop/category/list')
                 .then(res => {
                   if (parseInt(res.data.code) == 200) {
                       this.category=res.data.data
@@ -291,7 +291,7 @@ export default {
                 let params = new URLSearchParams()
                 let id = parseInt(this.$route.query.pageState.id)
                 util.ajax
-                    .get('v2.0/shop/' + id)
+                    .get('shop/' + id)
                     .then((res) => {
                         if (parseInt(res.data.code) == 200) {
                             let resData=JSON.parse(JSON.stringify((res.data.data)))
@@ -816,7 +816,7 @@ export default {
             // })
             let params = JSON.stringify(template)
             util.ajax
-                .post('v2.0/shop/renew', params) // 以车型为基准 不是以 id
+                .post('shop/renew', params) // 以车型为基准 不是以 id
                 .then((res) => {
                     if (parseInt(res.data.status)) {
                         this.$router.push({

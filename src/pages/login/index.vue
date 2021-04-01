@@ -71,8 +71,8 @@ export default {
                 localStorage.setItem('token', res.data.data.token)
                 localStorage.setItem('userName', res.data.data.admin[0].userName)
                 let permissionList=res.data.data.admin[0].permissionList
-                permissionList.push('TRACKFUN商城')
-                localStorage.setItem('permission', permissionList)
+                // permissionList.push('TRACKFUN商城')
+                localStorage.setItem('permissionSelf', permissionList)
                 this.$store.commit('token', res.data.data.token)
                 resetRouter()
                 if (permissionList.length > 0) {
@@ -129,7 +129,7 @@ export default {
     //             localStorage.setItem('userName', res.data.data.admin[0].userName)
     //             let permissionList=res.data.data.admin[0].permissionList
     //             permissionList.push('TRACKFUN商城')
-    //             localStorage.setItem('permission', permissionList)
+    //             localStorage.setItem('permissionSelf', permissionList)
     //             this.$store.commit('token', res.data.data.token)
     //             resetRouter()
     //             if (permissionList.length > 0) {

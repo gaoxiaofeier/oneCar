@@ -609,7 +609,6 @@ export default {
 
         splitNodeList.push(...splitNodeListOneColumn)
       })
-      console.log(splitNodeList)
       return splitNodeList
     },
 

@@ -1,3 +1,11 @@
+/*
+ * @Descripttion: 
+ * @version: X3版本
+ * @Author: GaoFei
+ * @Date: 2020-02-19 23:22:10
+ * @LastEditors: GaoFei
+ * @LastEditTime: 2021-01-28 16:08:58
+ */
 import { asyncRoutes, constantRoutes } from '@/router'
 
 /**
@@ -48,7 +56,6 @@ const mutations = {
 
 const actions = {
   generateRoutes({ commit }, roles) {
-    alert(88)
     return new Promise(resolve => {
       let accessedRoutes
       if (roles.includes('admin')) {

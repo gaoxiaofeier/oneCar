@@ -58,10 +58,8 @@
                     <!-- <el-table-column prop="id" label="id">
           </el-table-column> -->
                     <el-table-column prop="id" label="id" style="">
-
                     </el-table-column>
                     <el-table-column prop="name" label="商品SPU">
-
                     </el-table-column>
                     <el-table-column prop="categoryName" label="类别">
                     </el-table-column>
@@ -96,7 +94,7 @@
                     </el-table-column>
                     <el-table-column prop="stock" label="库存">
                     </el-table-column>
-                    <el-table-column prop="id" label="操作">
+                    <el-table-column prop="id" label="操作" fixed="right">
                         <template slot-scope="scope">
                             <div style="text-align:center">
                                 <el-button type="text" @click="changeStatus(scope.row)" style="marin-left:10px;">
@@ -109,7 +107,6 @@
                                     删除
                                 </el-button>
                             </div>
-
                         </template>
                     </el-table-column>
                 </el-table>
@@ -315,7 +312,7 @@ export default {
                     let ids = id
                     params.append('shopId', ids)
                     util.ajax
-                        .delete('v2.0/shop/' + ids)
+                        .delete('shop/' + ids)
                         .then((res) => {
                             console.log(typeof res.data.code)
                             if (parseInt(res.data.code) == 200) {
@@ -345,7 +342,7 @@ export default {
         getTableData() {
             var params = this.getSearchParams()
             util.ajax
-                .post('v2.0/shop/list', params)
+                .post('shop/list', params)
                 .then((res) => {
                     if (res.data.code == 200) {
                         if (res.data.data) {
@@ -369,7 +366,7 @@ export default {
         categoryList() {
             //类别
             util.ajax
-                .get('v2.0/shop/category/list')
+                .get('shop/category/list')
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.category = JSON.parse(JSON.stringify(res.data.data))
@@ -436,7 +433,7 @@ export default {
                 status: value,
             }
             util.ajax
-                .post('v2.0/shop/status', params)
+                .post('shop/status', params)
                 .then((res) => {
                     if (parseInt(res.data.code) == 200) {
                         this.$message('操作成功')
@@ -480,7 +477,7 @@ export default {
                     name: this.typeCount,
                 }
                 util.ajax
-                    .post('v2.0/shop/category/renew', params)
+                    .post('shop/category/renew', params)
                     .then((res) => {
                         if (parseInt(res.data.code) == 200) {
                             this.$message('操作成功')
@@ -499,7 +496,7 @@ export default {
                     name: this.typeCount,
                 }
                 util.ajax
-                    .post('v2.0/shop/category/renew', params)
+                    .post('shop/category/renew', params)
                     .then((res) => {
                         if (parseInt(res.data.code) == 200) {
                             this.$message('操作成功')
@@ -528,7 +525,7 @@ export default {
                 .then(() => {
                     let ids = parseInt(id)
                     util.ajax
-                        .delete('v2.0/shop/category/' + ids) //
+                        .delete('shop/category/' + ids) //
                         .then((res) => {
                             if (parseInt(res.data.code) == 200) {
                                 this.$message('删除成功')

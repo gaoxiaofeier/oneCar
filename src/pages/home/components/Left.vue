@@ -94,7 +94,7 @@ export default {
     }
   },
   created() {
-    let permissionList = localStorage.getItem('permission')
+    let permissionList = localStorage.getItem('permissionSelf')
     permissionList = permissionList.split(',')
     permissionList.forEach(menuName => {
       let findIteminAllMenuList = this.allMenuList.find(item => {

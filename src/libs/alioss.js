@@ -4,7 +4,7 @@
  * @Author: GaoFei
  * @Date: 2020-03-21 01:54:54
  * @LastEditors: GaoFei
- * @LastEditTime: 2021-01-01 10:44:38
+ * @LastEditTime: 2021-01-28 15:18:24
  */
 
 // import OSS from 'ali-oss';
@@ -23,4 +23,5 @@ export function ossClient(data) {
     bucket: 'app-onecar'
   })
 }
+
 

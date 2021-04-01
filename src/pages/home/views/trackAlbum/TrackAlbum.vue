@@ -144,11 +144,11 @@
                             action="#" 
                             :http-request="httpUpload" 
                             list-type="picture-card" 
-                            :on-success="SuccessPei" 
                             :before-upload="beforeUpload"
                             :on-remove="handleRemove" 
                             :file-list="ruleForm.picList" 
                             :show-file-list="false"
+                            :on-success="SuccessPei"
                             multiple
                             class="upload_box"
                             >
@@ -238,6 +238,7 @@ export default {
             returnImg: [],
             imgArr: [],
             newImg: [],
+            picCount:null,  //一共上传了多少张
         }
     },
 
@@ -298,7 +299,6 @@ export default {
             var fileName = file.file.name
             fileName =
                 new Date().getTime() + '_' + Math.ceil(Math.random() * 1000) + '_' + file.file.name
-                console.log(fileName)
             var file1 = file.file
             ossClient()
                 .put(fileName, file1, {
@@ -306,9 +306,10 @@ export default {
                 })
                 .then(({ res, url, name }) => {
                     if (res && res.status == 200) {
-                        // let temp = { name: name, url: url+'?x-oss-process=image/resize,p_50' }
-                        let temp = { name: name, url: url }
+                        let temp = { name: name, url: url+'?x-oss-process=image/format,jpg/quality,q_50' }
+                        //let temp = { name: name, url: url }
                         this.returnImg.push(temp)
+                        this.SuccessPic(temp)
                     }
                 })
                 .catch((err) => {
@@ -465,10 +466,10 @@ export default {
 
                 let template = []
                 if (row.picList.length) {
-                    this.returnImg = row.picList
+                    let picArr=JSON.parse(JSON.stringify(row.picList))
+                    this.returnImg = picArr
                     this.progressCount = row.picList.length //上传配图进度条  图片上传成功个数累加
-        
-                    row.picList.forEach((item, index) => {
+                    picArr.forEach((item, index) => {
                         template[index] = { name: item.name, url: item.url}
                         // let site = item.url.lastIndexOf('/')
                         // let target =
@@ -513,12 +514,13 @@ export default {
             const isLt10Mb = file.size / 1024/1024 < 10
             if (!(isJPG || isPng)) {
                 this.$message.error('上传头像图片只能是 JPG, PNG 格式!')
+                return false
+            }else if(!isLt10Mb){
+                this.$message.error('上传图片大小不能超过 10M!')
+                return false
+            }else{
+                return isPng || isJPG
             }
-            if (!isLt10Mb) {
-              this.$message.error('上传图片大小不能超过 10M!')
-              return false
-            }
-            return isPng || isJPG
         },
 
         handleRemove(file, fileList) {
@@ -530,12 +532,15 @@ export default {
                     this.returnImg.splice(index, 1)
                 }
             })
+        },  
+        SuccessPei(file) {
+            this.picCount= this.$refs.upload.uploadFiles.length
         },
-        SuccessPei(res, file) {
+        SuccessPic(file) {
             this.progressCount++
-            let uf = this.$refs.upload.uploadFiles.length
             this.showProgress = true
-            this.progress = (this.progressCount / uf) * 100
+            this.progress = (this.progressCount / this.picCount) * 100
+            // console.log(this.progressCount,"---", this.picCount)
             // console.log('百分数', this.progress)
             this.ruleForm.picList.push(file)
         },
@@ -543,7 +548,19 @@ export default {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
                     let template = JSON.parse(JSON.stringify(this.ruleForm))
+                    //加上压缩拼接
+                    // this.returnImg.forEach((item)=>{
+                    //     let abc=item.url.split('?')
+                    //     item.url=item.url+'?x-oss-process=image/quality,q_50'
+                    // })
+                    //去掉压缩拼接
+                    // this.returnImg.forEach((item)=>{
+                    //     let abc=item.url.split('?')
+                    //     item.url=abc[0]
+                    // })
                     template.picList = this.returnImg
+                    
+                    
                     let params = JSON.stringify(template)
                     if (this.title == '新增影集') {
                         util.ajax

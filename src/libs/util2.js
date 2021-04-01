@@ -2,7 +2,9 @@ import axios from 'axios'
 import store from '../store';
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 const local = false;
-let apiPath = local ? 'http://localhost:8080/api' : 'https://app.onecar.fun/api/';
+// let apiPath = local ? 'http://localhost:8080/api' : 'https://app.onecar.fun/api/';
+let apiPath = local ? 'http://localhost:8080/api' : 'http://39.98.194.220:9092/api/v2.0';
+
 //http://test.onecar.dp20.cn/api/v1.0/
 
 const Util = {

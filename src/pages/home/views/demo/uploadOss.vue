@@ -1,3 +1,11 @@
+<!--
+ * @Descripttion: 
+ * @version: X3版本
+ * @Author: GaoFei
+ * @Date: 2020-03-22 15:23:39
+ * @LastEditors: GaoFei
+ * @LastEditTime: 2021-01-28 16:09:06
+-->
 <template>
   <div class="upload-oss" style="margin: 10px;">
     <el-upload action="#" ref="upload" :before-upload="beforeUpload" :http-request="upload" list-type="picture-card" :on-preview="handlePictureCardPreview" :on-remove="handleRemove">
@@ -65,7 +73,6 @@ export default {
         })
         .then(({ res, url, name }) => {
           if (res && res.status == 200) {
-            alert(99)
             console.log(`阿里云OSS上传图片成功回调`, res, url, name)
           }
         })
